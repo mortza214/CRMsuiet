@@ -9,6 +9,7 @@ using CrmSuite.Modules.Payments.Application.Dtos;
 using CrmSuite.Modules.Payments.Application.Mapping;
 using CrmSuite.Modules.Payments.Application.Queries;
 using CrmSuite.Modules.Payments.Application.Services;
+using CrmSuite.Modules.Workflow.Application.Commands;
 using CrmSuite.Modules.Payments.Domain.Entities;
 using CrmSuite.Modules.Payments.Domain.Enums;
 using MediatR;
@@ -27,6 +28,7 @@ public sealed class CreateManualPaymentCommandHandler
     private readonly FoundationCurrentUser _currentUser;
     private readonly IDateTimeProvider _clock;
     private readonly PaymentDtoMapper _mapper;
+    private readonly IMediator? _mediator;
 
     public CreateManualPaymentCommandHandler(
         ITransactionRepository transactions,
@@ -36,7 +38,8 @@ public sealed class CreateManualPaymentCommandHandler
         IAuditScope auditScope,
         FoundationCurrentUser currentUser,
         IDateTimeProvider clock,
-        PaymentDtoMapper mapper)
+        PaymentDtoMapper mapper,
+        IMediator? mediator = null)
     {
         _transactions = transactions;
         _invoices = invoices;
@@ -46,6 +49,7 @@ public sealed class CreateManualPaymentCommandHandler
         _currentUser = currentUser;
         _clock = clock;
         _mapper = mapper;
+        _mediator = mediator;
     }
 
     public async Task<Result<TransactionDto>> Handle(
@@ -115,6 +119,23 @@ public sealed class CreateManualPaymentCommandHandler
         _transactions.Add(transaction);
         await _unitOfWork.SaveChangesAsync(cancellationToken);
         _auditScope.EntityId = transaction.Id.ToString();
+
+        if (_mediator is not null && request.InvoiceId.HasValue)
+        {
+            try
+            {
+                await _mediator.Send(
+                    new AdvanceToFinanceReviewCommand(
+                        (await _invoices.GetByIdWithItemsAsync(
+                            request.InvoiceId.Value,
+                            cancellationToken))!.OrderId),
+                    cancellationToken);
+            }
+            catch
+            {
+                // Payment must remain recorded even when the workflow is in a later state.
+            }
+        }
 
         return Result.Success(_mapper.ToDto(transaction, invoiceNumber, customer.DisplayName));
     }

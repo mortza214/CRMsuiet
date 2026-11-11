@@ -36,11 +36,12 @@ public sealed class WorkflowSeedService
         var purchase = await EnsureDepartmentAsync("خرید", cancellationToken);
         var technicalManager = await EnsureRoleAsync("TechnicalManager", "مدیر فنی", cancellationToken);
         var technicalExpert = await EnsureRoleAsync("TechnicalExpert", "کارشناس فنی", cancellationToken);
+        var financeExpert = await EnsureRoleAsync("FinanceExpert", "کارشناس مالی", cancellationToken);
         var now = DateTime.UtcNow;
 
         if (!existingCodes.Contains(BandwidthCode))
         {
-            var definition = BuildBandwidth(technical.Id, purchase.Id, technicalManager.Id, technicalExpert.Id, now);
+            var definition = BuildBandwidth(technical.Id, purchase.Id, technicalManager.Id, technicalExpert.Id, financeExpert.Id, now);
             definition.Publish(null, now);
             _dbContext.Set<WorkflowDefinition>().Add(definition);
         }
@@ -90,6 +91,7 @@ public sealed class WorkflowSeedService
         Guid purchaseDepartmentId,
         Guid technicalManagerRoleId,
         Guid technicalExpertRoleId,
+        Guid financeExpertRoleId,
         DateTime now)
     {
         var definition = new WorkflowDefinition(
@@ -114,7 +116,7 @@ public sealed class WorkflowSeedService
         var installationReview = definition.AddState("INSTALLATION_REVIEW", "تایید نصب", WorkflowStateType.Normal, 12, false, WorkflowAssigneeType.Department, technicalDepartmentId.ToString(), "InstallationReport", "#722ed1", WorkflowActionKey.ReviewInstallation);
         var finalInvoice = definition.AddState("FINAL_INVOICE", "فاکتور نهایی", WorkflowStateType.Normal, 13, false, WorkflowAssigneeType.CustomerOwner, null, null, "#722ed1", WorkflowActionKey.IssueFinalInvoice);
         var finalPayment = definition.AddState("FINAL_PAYMENT", "پرداخت نهایی", WorkflowStateType.Normal, 14, false, WorkflowAssigneeType.CustomerOwner, null, null, "#f5222d", WorkflowActionKey.RequestPayment);
-        var financeReview = definition.AddState("FINANCE_REVIEW", "تایید مالی", WorkflowStateType.Normal, 15, false, WorkflowAssigneeType.CustomerOwner, null, null, "#fa8c16", WorkflowActionKey.VerifyPayment);
+        var financeReview = definition.AddState("FINANCE_REVIEW", "تایید مالی", WorkflowStateType.Normal, 15, false, WorkflowAssigneeType.Role, financeExpertRoleId.ToString(), null, "#fa8c16", WorkflowActionKey.VerifyPayment);
         var contract = definition.AddState("CONTRACT", "قرارداد", WorkflowStateType.Normal, 16, false, WorkflowAssigneeType.CustomerOwner, null, null, "#2f54eb", WorkflowActionKey.SignContract);
         var completed = definition.AddState("COMPLETED", "پایان (فعال‌سازی)", WorkflowStateType.End, 17, true, WorkflowAssigneeType.None, null, null, "#52c41a", WorkflowActionKey.ActivateService);
         var cancelled = definition.AddState("CANCELLED", "لغو شده", WorkflowStateType.End, 18, true, WorkflowAssigneeType.None, null, null, "#f5222d", WorkflowActionKey.None);
@@ -132,6 +134,7 @@ public sealed class WorkflowSeedService
         AddTransition(definition, proforma, customerApproval, "ارسال به مشتری", 11);
         AddTransition(definition, customerApproval, installationPending, "تایید مشتری", 12);
         AddTransition(definition, customerApproval, cancelled, "انصراف مشتری", 18);
+        AddTransition(definition, customerApproval, financeReview, "ارسال به بررسی مالی", 22);
         AddTransition(definition, installationPending, installationInProgress, "ارسال به نیروی نصب", 13);
         AddTransition(definition, installationInProgress, installationReview, "ارسال به مدیر فنی", 14);
         AddTransition(definition, installationReview, finalInvoice, "تایید نصب", 15);

@@ -183,7 +183,9 @@ public sealed class InvoiceReadRepository : IInvoiceReadRepository
             _jalaliDate.ToJalali(dueDate),
             row.TotalAmount,
             row.PaidAmount,
-            row.Status);
+            row.Status,
+        row.RequiresPayment,
+        row.PaymentMode);
     }
 
     private static DateTime AsUtc(DateTime value) =>
@@ -214,5 +216,9 @@ public sealed class InvoiceReadRepository : IInvoiceReadRepository
         public decimal PaidAmount { get; set; }
 
         public string Status { get; set; } = string.Empty;
+
+        public bool RequiresPayment { get; set; } = true;
+
+        public string? PaymentMode { get; set; }
     }
 }

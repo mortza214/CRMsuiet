@@ -210,7 +210,7 @@ export function PortalRequests() {
             )}
 
             <Space wrap>
-              {invoice && invoice.status !== "Paid" && (
+              {invoice && invoice.requiresPayment !== false && invoice.status !== "Paid" && (
                 <>
                   <Button
                     type="primary"
@@ -238,7 +238,11 @@ export function PortalRequests() {
               {approveTransition && (
                 <Button
                   type="primary"
-                  disabled={Boolean(invoice && invoice.status !== "Paid")}
+                  disabled={Boolean(
+                    invoice &&
+                      invoice.requiresPayment !== false &&
+                      invoice.status !== "Paid",
+                  )}
                   loading={busy}
                   onClick={() =>
                     void execute(approveTransition.id, {

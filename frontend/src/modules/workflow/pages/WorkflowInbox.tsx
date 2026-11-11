@@ -657,14 +657,14 @@ export function WorkflowInbox() {
                   <Space wrap>
                     <Button
                       type="primary"
-                      disabled={currentInvoice.status === "Paid"}
+                      disabled={currentInvoice.status === "Paid" || currentInvoice.requiresPayment === false}
                       loading={initiateOnline.isPending}
                       onClick={() => void handleOnlinePayment()}
                     >
                       پرداخت آنلاین
                     </Button>
                     <Button
-                      disabled={currentInvoice.status === "Paid"}
+                      disabled={currentInvoice.status === "Paid" || currentInvoice.requiresPayment === false}
                       onClick={() => {
                         setReceiptImageUrl(null);
                         manualPaymentForm.setFieldsValue({ amount: currentInvoice.totalAmount });

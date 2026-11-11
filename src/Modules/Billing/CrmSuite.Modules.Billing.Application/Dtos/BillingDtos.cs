@@ -45,7 +45,9 @@ public sealed record InvoiceListItemDto(
     string DueDateJalali,
     decimal TotalAmount,
     decimal PaidAmount,
-    string Status);
+    string Status,
+    bool RequiresPayment = true,
+    string? PaymentMode = null);
 
 public sealed record ContractDto(
     Guid Id,

@@ -223,7 +223,9 @@ export function PortalInvoices() {
               onClick={() => void handlePdf(record.id)}
               aria-label="دانلود PDF"
             />
-            {remaining > 0 && record.status === "PendingPayment" && (
+            {remaining > 0 &&
+              record.status === "PendingPayment" &&
+              record.requiresPayment !== false && (
               <>
                 <Button
                   size="small"

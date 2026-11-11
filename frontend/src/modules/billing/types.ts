@@ -32,6 +32,8 @@ export interface InvoiceListItem {
   totalAmount: number;
   paidAmount: number;
   status: InvoiceStatus;
+  requiresPayment?: boolean;
+  paymentMode?: string | null;
 }
 
 export interface InvoiceDetail extends InvoiceListItem {
