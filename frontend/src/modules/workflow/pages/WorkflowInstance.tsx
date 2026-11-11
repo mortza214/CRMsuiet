@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import {
   ArrowRightOutlined,
   CloseCircleOutlined,
@@ -14,7 +14,6 @@ import {
   Modal,
   Popconfirm,
   Result,
-  Select,
   Space,
   Spin,
   Table,
@@ -26,9 +25,11 @@ import {
 import { useNavigate, useParams } from "react-router-dom";
 import { useAuthStore } from "@/modules/auth/store";
 import { useServiceRequestDetail } from "@/modules/orders/hooks/useOrders";
+import { useFormSubmissions, useFormTemplateByCode } from "@/modules/forms/hooks/useForms";
+import { WorkflowFormRenderer } from "@/modules/workflow/components/WorkflowFormRenderer";
 import {
   useCancelWorkflowInstance,
-  useExecuteWorkflowTransition,
+  useExecuteWorkflowAction,
   useWorkflowInstance,
 } from "@/modules/workflow/hooks/useWorkflow";
 import type {
@@ -93,26 +94,61 @@ export function WorkflowInstance() {
   const canExecute = hasPermission("Workflow.Instance.Execute");
   const canCancel = hasPermission("Workflow.Instance.Cancel");
   const [actionOpen, setActionOpen] = useState(false);
+  const [actionData, setActionData] = useState<Record<string, unknown>>({});
   const [actionForm] = Form.useForm<ActionForm>();
   const instance = useWorkflowInstance(id);
+  const currentTask = instance.data?.tasks.find(
+    (task) => task.status === "Pending" && task.stateId === instance.data?.currentStateId,
+  );
+  const currentFormTemplate = useFormTemplateByCode(currentTask?.formCode ?? undefined);
+  const previousForms = useFormSubmissions(
+    {
+      page: 1,
+      pageSize: 5,
+      entityType: instance.data?.entityType === "Order" ? "Order" : undefined,
+      entityId: instance.data?.entityId,
+      formTemplateId: currentFormTemplate.data?.id,
+    },
+    actionOpen && Boolean(currentTask?.formCode),
+  );
   const request = useServiceRequestDetail(
     instance.data?.entityType === "Order" ? instance.data.entityId : undefined,
   );
-  const execute = useExecuteWorkflowTransition(id);
+  const execute = useExecuteWorkflowAction(id);
   const cancel = useCancelWorkflowInstance(id);
 
-  const submitAction = async (values: ActionForm) => {
+  useEffect(() => {
+    if (!actionOpen) return;
+    const json = previousForms.data?.items?.[0]?.submittedDataJson;
+    if (!json) return;
+    try {
+      setActionData(JSON.parse(json) as Record<string, unknown>);
+    } catch {
+      // Ignore malformed legacy data; the form starts empty.
+    }
+  }, [actionOpen, previousForms.data]);
+
+  const openAction = () => {
+    setActionData({});
+    actionForm.resetFields();
+    setActionOpen(true);
+  };
+
+  const submitAction = async (transitionId: string) => {
+    const comment = actionForm.getFieldValue("comment") as string | undefined;
+    const payload = {
+      ...actionData,
+      ...(comment?.trim() ? { comment: comment.trim() } : {}),
+    };
     try {
       await execute.mutateAsync({
-        transitionId: values.transitionId,
-        comment: values.comment?.trim() || null,
-        payloadJson: values.payloadJson?.trim() || null,
-        idempotencyKey: crypto.randomUUID(),
+        transitionId,
+        actionDataJson: JSON.stringify(payload),
       });
-      message.success("گذار با موفقیت اجرا شد.");
+      message.success("اقدام با موفقیت اجرا شد.");
       setActionOpen(false);
     } catch {
-      // پیام خطا توسط NotificationProvider نمایش داده می‌شود.
+      // NotificationProvider handles errors.
     }
   };
 
@@ -149,6 +185,7 @@ export function WorkflowInstance() {
 
   const data = instance.data;
   const isRunning = data.status === "Running";
+  const decisionTransitions = currentTask?.availableTransitions ?? data.availableTransitions;
 
   const taskColumns: TableColumnsType<WorkflowTask> = [
     {
@@ -221,10 +258,7 @@ export function WorkflowInstance() {
               type="primary"
               icon={<PlayCircleOutlined />}
               disabled={data.availableTransitions.length === 0}
-              onClick={() => {
-                actionForm.resetFields();
-                setActionOpen(true);
-              }}
+              onClick={openAction}
             >
               اقدام
             </Button>
@@ -346,29 +380,32 @@ export function WorkflowInstance() {
         title="اقدام در گردش کار"
         open={actionOpen}
         onCancel={() => setActionOpen(false)}
-        onOk={() => actionForm.submit()}
-        okText="ثبت اقدام"
-        cancelText="انصراف"
-        confirmLoading={execute.isPending}
+        footer={
+          <Space wrap>
+            <Button onClick={() => setActionOpen(false)}>انصراف</Button>
+            {decisionTransitions.map((transition) => (
+              <Button
+                key={transition.id}
+                type="primary"
+                loading={execute.isPending}
+                onClick={() => void submitAction(transition.id)}
+              >
+                {transition.name}
+              </Button>
+            ))}
+          </Space>
+        }
       >
-        <Form form={actionForm} layout="vertical" onFinish={submitAction}>
-          <Form.Item
-            name="transitionId"
-            label="گذار"
-            rules={[{ required: true, message: "گذار را انتخاب کنید." }]}
-          >
-            <Select
-              options={data.availableTransitions.map((transition) => ({
-                value: transition.id,
-                label: transition.name,
-              }))}
-            />
-          </Form.Item>
+        {currentTask?.formCode && (
+          <WorkflowFormRenderer
+            formCode={currentTask.formCode}
+            values={actionData}
+            onDataChange={setActionData}
+          />
+        )}
+        <Form form={actionForm} layout="vertical" style={{ marginTop: currentTask?.formCode ? 16 : 0 }}>
           <Form.Item name="comment" label="توضیح / دلیل">
             <Input.TextArea rows={3} />
-          </Form.Item>
-          <Form.Item name="payloadJson" label="Payload (JSON، اختیاری)">
-            <Input.TextArea rows={3} dir="ltr" placeholder='{"key":"value"}' />
           </Form.Item>
         </Form>
       </Modal>

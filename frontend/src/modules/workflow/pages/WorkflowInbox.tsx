@@ -24,7 +24,7 @@ import {
 } from "antd";
 import { useNavigate } from "react-router-dom";
 import { useAuthStore } from "@/modules/auth/store";
-import { useFormSubmissions } from "@/modules/forms/hooks/useForms";
+import { useFormSubmissions, useFormTemplateByCode } from "@/modules/forms/hooks/useForms";
 import { useDepartments } from "@/modules/tickets/hooks/useTickets";
 import { useDepartments as useSettingsDepartments } from "@/modules/settings/hooks/useSettings";
 import { WorkflowFormRenderer } from "../components/WorkflowFormRenderer";
@@ -88,12 +88,14 @@ export function WorkflowInbox() {
   );
   const expertCandidates =
     technicalExperts.length > 0 ? technicalExperts : (expertsQuery.data ?? []);
+  const currentFormTemplate = useFormTemplateByCode(selectedTaskAction?.formCode);
   const previousForms = useFormSubmissions(
     {
       page: 1,
       pageSize: 5,
       entityType: "Order",
       entityId: selectedTask?.entityId,
+      formTemplateId: currentFormTemplate.data?.id,
     },
     Boolean(selectedTask && selectedTaskAction?.formCode) ||
       selectedTaskAction?.actionKey === "ReviewFeasibility",
