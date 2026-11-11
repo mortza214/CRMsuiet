@@ -25,6 +25,10 @@ import {
 import { useNavigate } from "react-router-dom";
 import { useAuthStore } from "@/modules/auth/store";
 import { useFormSubmissions, useFormTemplateByCode } from "@/modules/forms/hooks/useForms";
+import { useServiceRequestDetail } from "@/modules/orders/hooks/useOrders";
+import { useInvoices } from "@/modules/billing/hooks/useInvoices";
+import { useCreateManualPayment, useInitiateSamanPayment } from "@/modules/payments/hooks/usePayments";
+import { formatCurrency } from "@/shared/utils/format";
 import { useDepartments } from "@/modules/tickets/hooks/useTickets";
 import { useDepartments as useSettingsDepartments } from "@/modules/settings/hooks/useSettings";
 import { WorkflowFormRenderer } from "../components/WorkflowFormRenderer";
@@ -69,6 +73,8 @@ export function WorkflowInbox() {
   const [actionOpen, setActionOpen] = useState(false);
   const [actionData, setActionData] = useState<Record<string, unknown>>({});
   const [reviewEditable, setReviewEditable] = useState(false);
+  const [manualPaymentOpen, setManualPaymentOpen] = useState(false);
+  const [manualPaymentForm] = Form.useForm<{ referenceNumber: string }>();
   const [actionForm] = Form.useForm<ActionForm>();
   const tasks = useMyWorkflowTasks(status, departmentId);
   const departments = useDepartments(canReadDepartments);
@@ -121,6 +127,22 @@ export function WorkflowInbox() {
     }
   }, [previousFormData, selectedTaskAction]);
 
+  const requestDetail = useServiceRequestDetail(
+    selectedTask?.entityType === "Order" ? selectedTask.entityId : undefined,
+  );
+  const invoices = useInvoices(
+    {
+      page: 1,
+      pageSize: 100,
+      customerId: requestDetail.data?.customerId,
+    },
+    Boolean(requestDetail.data?.customerId),
+  );
+  const currentInvoice = invoices.data?.items.find(
+    (invoice) => invoice.orderId === selectedTask?.entityId,
+  );
+  const initiateOnline = useInitiateSamanPayment();
+  const createManualPayment = useCreateManualPayment();
   const execute = useExecuteWorkflowAction(selectedTask?.instanceId);
 
   const openAction = (task: WorkflowTask) => {
@@ -135,12 +157,16 @@ export function WorkflowInbox() {
     setActionOpen(true);
   };
 
-  const submitAction = async (values: ActionForm, transitionId?: string) => {
+  const submitAction = async (
+    values: ActionForm,
+    transitionId?: string,
+    extraData: Record<string, unknown> = {},
+  ) => {
     const actionKey = selectedTaskAction?.actionKey ?? "None";
     const selectedTransition = selectedTask?.availableTransitions.find(
       (transition) => transition.id === transitionId,
     );
-    const normalizedData = { ...actionData };
+    const normalizedData = { ...actionData, ...extraData };
     if (actionKey === "CustomerAction" && !normalizedData.decision) {
       normalizedData.decision = selectedTransition?.name.includes("انصراف")
         ? "cancel"
@@ -165,6 +191,47 @@ export function WorkflowInbox() {
       // NotificationProvider handles errors.
     }
   };
+
+  const handleOnlinePayment = async () => {
+    if (!currentInvoice) return;
+    const popup = window.open("about:blank", "_blank");
+    try {
+      const payment = await initiateOnline.mutateAsync(currentInvoice.id);
+      if (popup) {
+        popup.location.href = payment.paymentUrl;
+      } else {
+        window.open(payment.paymentUrl, "_blank");
+      }
+      message.info("برای تکمیل پرداخت به درگاه بانک هدایت شدید.");
+    } catch {
+      popup?.close();
+    }
+  };
+
+  const handleManualPayment = async (values: { referenceNumber: string }) => {
+    if (!currentInvoice || !requestDetail.data) return;
+    try {
+      await createManualPayment.mutateAsync({
+        invoiceId: currentInvoice.id,
+        customerId: requestDetail.data.customerId,
+        amount: currentInvoice.totalAmount,
+        paymentMethod: "ManualTransfer",
+        referenceNumber: values.referenceNumber.trim(),
+      });
+      message.success("فیش پرداخت ثبت شد و در انتظار تأیید مالی است.");
+      setManualPaymentOpen(false);
+      manualPaymentForm.resetFields();
+    } catch {
+      // NotificationProvider handles errors.
+    }
+  };
+
+  const approveTransition = selectedTask?.availableTransitions.find(
+    (transition) => transition.name.includes("تایید") && !transition.name.includes("انصراف"),
+  );
+  const cancelTransition = selectedTask?.availableTransitions.find(
+    (transition) => transition.name.includes("انصراف"),
+  );
 
   const columns: TableColumnsType<WorkflowTask> = [
     {
@@ -335,7 +402,8 @@ export function WorkflowInbox() {
         footer={
           <Space>
             <Button onClick={() => setActionOpen(false)}>انصراف</Button>
-            {(selectedTask?.availableTransitions ?? []).map((transition) => (
+            {selectedTaskAction?.actionKey !== "RequestPayment" &&
+              (selectedTask?.availableTransitions ?? []).map((transition) => (
               <Button
                 key={transition.id}
                 type="primary"
@@ -350,7 +418,7 @@ export function WorkflowInbox() {
                   ? "ثبت و ارجاع"
                   : transition.name}
               </Button>
-            ))}
+              ))}
           </Space>
         }
       >
@@ -538,37 +606,78 @@ export function WorkflowInbox() {
           )}
 
           {selectedTaskAction?.actionKey === "RequestPayment" && (
-            <>
-              <Alert
-                type="info"
-                showIcon
-                message="برای ادامه، پرداخت فاکتور باید تأیید شده باشد."
-                style={{ marginBottom: 12 }}
-              />
-              <Form.Item label="تأیید پیش‌فاکتور / پرداخت">
-                <Space direction="vertical">
-                  <Checkbox
-                    checked={Boolean(actionData.approved)}
-                    onChange={(event) => setActionData((current) => ({ ...current, approved: event.target.checked }))}
-                  >
-                    پیش‌فاکتور تأیید شد
-                  </Checkbox>
-                  <Checkbox
-                    checked={Boolean(actionData.paid)}
-                    onChange={(event) => setActionData((current) => ({ ...current, paid: event.target.checked }))}
-                  >
-                    پرداخت تأیید شد
-                  </Checkbox>
+            <Card size="small" title="اطلاعات فاکتور">
+              {currentInvoice ? (
+                <Space direction="vertical" size={8} style={{ width: "100%" }}>
+                  <Typography.Text>
+                    شماره فاکتور: <strong dir="ltr">{currentInvoice.invoiceNumber}</strong>
+                  </Typography.Text>
+                  <Typography.Text>
+                    مبلغ کل: <strong>{formatCurrency(currentInvoice.totalAmount)}</strong>
+                  </Typography.Text>
+                  <Typography.Text>
+                    وضعیت:{" "}
+                    <Tag color={currentInvoice.status === "Paid" ? "green" : "orange"}>
+                      {currentInvoice.status === "Paid"
+                        ? "پرداخت شده"
+                        : currentInvoice.status === "PartiallyPaid"
+                          ? "پرداخت جزئی"
+                          : "پرداخت نشده"}
+                    </Tag>
+                  </Typography.Text>
+                  <Space wrap>
+                    <Button
+                      type="primary"
+                      disabled={currentInvoice.status === "Paid"}
+                      loading={initiateOnline.isPending}
+                      onClick={() => void handleOnlinePayment()}
+                    >
+                      پرداخت آنلاین
+                    </Button>
+                    <Button
+                      disabled={currentInvoice.status === "Paid"}
+                      onClick={() => setManualPaymentOpen(true)}
+                    >
+                      ثبت فیش / واریز
+                    </Button>
+                  </Space>
                 </Space>
-              </Form.Item>
-              <Form.Item label="شناسه فاکتور (اختیاری)">
-                <Input
-                  dir="ltr"
-                  value={String(actionData.invoiceId ?? "")}
-                  onChange={(event) => setActionData((current) => ({ ...current, invoiceId: event.target.value }))}
+              ) : (
+                <Alert
+                  type="warning"
+                  showIcon
+                  message="فاکتوری برای این درخواست ثبت نشده است."
                 />
-              </Form.Item>
-            </>
+              )}
+              <Space wrap style={{ marginTop: 16 }}>
+                {approveTransition && (
+                  <Button
+                    type="primary"
+                    disabled={Boolean(currentInvoice && currentInvoice.status !== "Paid")}
+                    onClick={() =>
+                      void submitAction({} as ActionForm, approveTransition.id, {
+                        approved: true,
+                        requiresPayment: !currentInvoice,
+                      })
+                    }
+                  >
+                    تایید بدون پرداخت
+                  </Button>
+                )}
+                {cancelTransition && (
+                  <Button
+                    danger
+                    onClick={() =>
+                      void submitAction({} as ActionForm, cancelTransition.id, {
+                        decision: "cancel",
+                      })
+                    }
+                  >
+                    انصراف
+                  </Button>
+                )}
+              </Space>
+            </Card>
           )}
 
           {selectedTaskAction?.actionKey === "ActivateService" && (
@@ -591,6 +700,29 @@ export function WorkflowInbox() {
               <Input.TextArea rows={3} placeholder='{"key":"value"}' dir="ltr" />
             </Form.Item>
           ) : null}
+        </Form>
+      </Modal>
+
+      <Modal
+        title="ثبت فیش پرداخت"
+        open={manualPaymentOpen}
+        onCancel={() => setManualPaymentOpen(false)}
+        onOk={() => manualPaymentForm.submit()}
+        okText="ثبت فیش"
+        cancelText="انصراف"
+        confirmLoading={createManualPayment.isPending}
+      >
+        <Form form={manualPaymentForm} layout="vertical" onFinish={handleManualPayment}>
+          <Form.Item
+            name="referenceNumber"
+            label="شماره پیگیری / شماره فیش"
+            rules={[{ required: true, message: "شماره پیگیری را وارد کنید." }]}
+          >
+            <Input dir="ltr" />
+          </Form.Item>
+          <Typography.Text type="secondary">
+            مبلغ فیش: {currentInvoice ? formatCurrency(currentInvoice.totalAmount) : "-"}
+          </Typography.Text>
         </Form>
       </Modal>
     </Space>

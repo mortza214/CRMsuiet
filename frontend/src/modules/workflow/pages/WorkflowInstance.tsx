@@ -25,7 +25,8 @@ import {
 import { useNavigate, useParams } from "react-router-dom";
 import { useAuthStore } from "@/modules/auth/store";
 import { useServiceRequestDetail } from "@/modules/orders/hooks/useOrders";
-import { useFormSubmissions, useFormTemplateByCode } from "@/modules/forms/hooks/useForms";
+import { useFormSubmissions, useFormTemplateByCode, useFormTemplates } from "@/modules/forms/hooks/useForms";
+import { WorkflowSubmissionSummary } from "@/modules/workflow/components/WorkflowSubmissionSummary";
 import { WorkflowFormRenderer } from "@/modules/workflow/components/WorkflowFormRenderer";
 import {
   useCancelWorkflowInstance,
@@ -114,6 +115,13 @@ export function WorkflowInstance() {
   const request = useServiceRequestDetail(
     instance.data?.entityType === "Order" ? instance.data.entityId : undefined,
   );
+  const formTemplates = useFormTemplates(false);
+  const formSubmissions = useFormSubmissions({
+    page: 1,
+    pageSize: 20,
+    entityType: instance.data?.entityType === "Order" ? "Order" : undefined,
+    entityId: instance.data?.entityId,
+  });
   const execute = useExecuteWorkflowAction(id);
   const cancel = useCancelWorkflowInstance(id);
 
@@ -316,6 +324,13 @@ export function WorkflowInstance() {
           </Descriptions>
         </Card>
       )}
+
+      <Card title="داده‌های فرم" variant="borderless" className="settings-section-card">
+        <WorkflowSubmissionSummary
+          submissions={formSubmissions.data?.items ?? []}
+          templates={formTemplates.data ?? []}
+        />
+      </Card>
 
       <Card variant="borderless" className="settings-section-card">
         <Descriptions bordered size="small" column={1}>

@@ -117,6 +117,7 @@ public sealed class WorkflowSeedService
         var financeReview = definition.AddState("FINANCE_REVIEW", "تایید مالی", WorkflowStateType.Normal, 15, false, WorkflowAssigneeType.CustomerOwner, null, null, "#fa8c16", WorkflowActionKey.VerifyPayment);
         var contract = definition.AddState("CONTRACT", "قرارداد", WorkflowStateType.Normal, 16, false, WorkflowAssigneeType.CustomerOwner, null, null, "#2f54eb", WorkflowActionKey.SignContract);
         var completed = definition.AddState("COMPLETED", "پایان (فعال‌سازی)", WorkflowStateType.End, 17, true, WorkflowAssigneeType.None, null, null, "#52c41a", WorkflowActionKey.ActivateService);
+        var cancelled = definition.AddState("CANCELLED", "لغو شده", WorkflowStateType.End, 18, true, WorkflowAssigneeType.None, null, null, "#f5222d", WorkflowActionKey.None);
 
         AddTransition(definition, initial, salesReview, "ارسال به بررسی", 1);
         AddTransition(definition, salesReview, feasibilityPending, "نیاز به امکان‌سنجی", 2);
@@ -130,6 +131,7 @@ public sealed class WorkflowSeedService
         AddTransition(definition, purchasePending, proforma, "تجهیزات آماده شد", 10);
         AddTransition(definition, proforma, customerApproval, "ارسال به مشتری", 11);
         AddTransition(definition, customerApproval, installationPending, "تایید مشتری", 12);
+        AddTransition(definition, customerApproval, cancelled, "انصراف مشتری", 18);
         AddTransition(definition, installationPending, installationInProgress, "ارسال به نیروی نصب", 13);
         AddTransition(definition, installationInProgress, installationReview, "ارسال به مدیر فنی", 14);
         AddTransition(definition, installationReview, finalInvoice, "تایید نصب", 15);

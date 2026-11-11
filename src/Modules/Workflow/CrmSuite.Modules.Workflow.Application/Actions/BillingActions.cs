@@ -196,14 +196,23 @@ public sealed class WorkflowBillingActionSupport
             string.IsNullOrWhiteSpace(actionData) ? "{}" : actionData);
         var root = document.RootElement;
 
+        var invoices = await _invoices.GetByOrderAsync(orderId, cancellationToken);
+
+        if (string.Equals(stateCode, "CUSTOMER_APPROVAL", StringComparison.OrdinalIgnoreCase))
+        {
+            var payable = invoices
+                .Where(invoice => invoice.RequiresPayment)
+                .OrderByDescending(invoice => invoice.CreatedAt)
+                .FirstOrDefault();
+            return payable is null || payable.Status == InvoiceStatus.Paid;
+        }
+
         if (ReadBoolean(root, "paid") ?? false)
         {
-            var invoices = await _invoices.GetByOrderAsync(orderId, cancellationToken);
             return invoices.Any(invoice => invoice.Status == InvoiceStatus.Paid);
         }
 
-        return string.Equals(stateCode, "CUSTOMER_APPROVAL", StringComparison.OrdinalIgnoreCase)
-               && (ReadBoolean(root, "approved") ?? false);
+        return false;
     }
 
     public static BillingInvoiceType ParseInvoiceType(string actionData)
