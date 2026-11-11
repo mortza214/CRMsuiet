@@ -83,7 +83,8 @@ public sealed class CustomersController : ControllerBase
                 request.IsReseller,
                 request.GroupId,
                 request.TagIds,
-                request.OwnerType),
+                request.OwnerType,
+                request.PreferredNotificationChannel),
             cancellationToken);
 
         return this.ToApiResult(result, "مشتری با موفقیت ایجاد شد.");
@@ -114,7 +115,9 @@ public sealed class CustomersController : ControllerBase
                 request.ParentCustomerId,
                 request.IsReseller,
                 request.GroupId,
-                request.TagIds),
+                request.TagIds,
+                request.OwnerType,
+                request.PreferredNotificationChannel),
             cancellationToken);
 
         return this.ToApiResult(result, "مشتری با موفقیت به‌روزرسانی شد.");

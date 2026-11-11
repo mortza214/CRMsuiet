@@ -23,4 +23,6 @@ public sealed record CustomerDto(
     string CreatedAtJalali,
     DateTime? UpdatedAt,
     string? UpdatedAtJalali,
-    string OwnerType = "CurrentUser");
+    string OwnerType = "CurrentUser",
+    Guid? OwnerId = null,
+    string PreferredNotificationChannel = "Sms");

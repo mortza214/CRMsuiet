@@ -23,6 +23,7 @@ public static class DependencyInjection
         services.AddScoped<INotificationSender, BaleNotificationSender>();
         services.AddScoped<INotificationService, NotificationService>();
         services.AddScoped<NotificationDtoMapper>();
+        services.AddScoped<CrmSuite.Modules.Notifications.Application.Services.CustomerNotificationHandler>();
 
         services.AddHttpClient<IppanelSmsProvider>((provider, client) =>
         {

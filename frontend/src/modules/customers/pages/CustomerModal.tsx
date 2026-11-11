@@ -2,7 +2,13 @@ import { useEffect } from "react";
 import { App, Button, Col, Drawer, Form, Input, Radio, Row, Select, Space, Switch, Typography, type FormInstance } from "antd";
 import type { AxiosError } from "axios";
 import { useCustomerOwners, useCreateCustomer, useUpdateCustomer } from "@/modules/customers/hooks/useCustomers";
-import type { CustomerDetail, CustomerPayload, CustomerType } from "@/modules/customers/types";
+import type {
+  CustomerDetail,
+  CustomerNotificationChannel,
+  CustomerOwnerType,
+  CustomerPayload,
+  CustomerType,
+} from "@/modules/customers/types";
 import { getApiErrorMessage } from "@/shared/api/client";
 import type { ApiEnvelope } from "@/modules/auth/types";
 
@@ -26,6 +32,8 @@ interface CustomerFormValues {
   address?: string;
   isReseller: boolean;
   ownerUserId?: string | null;
+  ownerType: CustomerOwnerType;
+  preferredNotificationChannel: CustomerNotificationChannel;
 }
 
 export function CustomerModal({ open, customer, onClose, onSaved }: CustomerModalProps) {
@@ -55,10 +63,17 @@ export function CustomerModal({ open, customer, onClose, onSaved }: CustomerModa
         address: customer.address ?? undefined,
         isReseller: customer.isReseller,
         ownerUserId: customer.ownerUserId ?? undefined,
+        ownerType: customer.ownerType ?? "CurrentUser",
+        preferredNotificationChannel: customer.preferredNotificationChannel ?? "Sms",
       });
     } else {
       form.resetFields();
-      form.setFieldsValue({ type: "Natural", isReseller: false });
+      form.setFieldsValue({
+        type: "Natural",
+        isReseller: false,
+        ownerType: "CurrentUser",
+        preferredNotificationChannel: "Sms",
+      });
     }
   }, [customer, form, open]);
 
@@ -76,6 +91,8 @@ export function CustomerModal({ open, customer, onClose, onSaved }: CustomerModa
       email: values.email?.trim() || null,
       address: values.address?.trim() || null,
       ownerUserId: values.ownerUserId ?? null,
+      ownerType: values.ownerType,
+      preferredNotificationChannel: values.preferredNotificationChannel,
       parentCustomerId: customer?.parentCustomerId ?? null,
       isReseller: values.isReseller,
       groupId: customer?.group?.id ?? null,
@@ -260,6 +277,28 @@ export function CustomerModal({ open, customer, onClose, onSaved }: CustomerModa
           valuePropName="checked"
         >
           <Switch checkedChildren="بله" unCheckedChildren="خیر" />
+        </Form.Item>
+
+        <Form.Item name="ownerType" label="نوع مالکیت مشتری">
+          <Select
+            options={[
+              { value: "Company", label: "شرکت" },
+              { value: "SalesExpert", label: "کارشناس فروش" },
+              { value: "CompanyReferred", label: "معرفی‌شده توسط شرکت" },
+              { value: "CurrentUser", label: "کاربر جاری" },
+              { value: "CompanyCustomer", label: "مشتری شرکتی" },
+              { value: "FollowUp", label: "پیگیری" },
+            ]}
+          />
+        </Form.Item>
+
+        <Form.Item name="preferredNotificationChannel" label="کانال اطلاع‌رسانی ترجیحی">
+          <Select
+            options={[
+              { value: "Sms", label: "پیامک" },
+              { value: "Bale", label: "بله" },
+            ]}
+          />
         </Form.Item>
 
         <Form.Item name="ownerUserId" label="کارشناس فروش (مالک مشتری)">

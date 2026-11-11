@@ -132,7 +132,9 @@ public sealed class UpdateCustomerCommandHandler
             request.GroupId,
             customer.UserId,
             _clock.UtcNow,
-            _currentUser.UserId);
+            _currentUser.UserId,
+            request.OwnerType,
+            request.PreferredNotificationChannel);
 
         if (request.TagIds is not null)
         {

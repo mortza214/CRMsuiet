@@ -90,6 +90,12 @@ const navigation: NavigationItem[] = [
     permissions: ["Commission.Entry.Approve"],
   },
   {
+    key: "/requests",
+    label: "درخواست‌ها",
+    icon: <ApartmentOutlined />,
+    permissions: ["Orders.Order.Read"],
+  },
+  {
     key: "/workflow/inbox",
     label: "کارتابل من",
     icon: <ApartmentOutlined />,

@@ -30,6 +30,7 @@ import { FormDefinitions } from "@/modules/forms/pages/FormDefinitions";
 import { FormSubmissions } from "@/modules/forms/pages/FormSubmissions";
 import { WorkflowDefinitions } from "@/modules/workflow/pages/WorkflowDefinitions";
 import { WorkflowEditor } from "@/modules/workflow/pages/WorkflowEditor";
+import { RequestList } from "@/modules/workflow/pages/RequestList";
 import { WorkflowInbox } from "@/modules/workflow/pages/WorkflowInbox";
 import { WorkflowInstance } from "@/modules/workflow/pages/WorkflowInstance";
 import { PortalProtectedRoute } from "@/modules/portal/ProtectedRoute";
@@ -209,6 +210,14 @@ const router = createBrowserRouter([
             element: (
               <PermissionRoute permission="Workflow.Definition.Read">
                 <WorkflowEditor />
+              </PermissionRoute>
+            ),
+          },
+          {
+            path: "requests",
+            element: (
+              <PermissionRoute permission="Orders.Order.Read">
+                <RequestList />
               </PermissionRoute>
             ),
           },

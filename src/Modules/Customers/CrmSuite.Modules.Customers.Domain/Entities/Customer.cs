@@ -26,7 +26,8 @@ public sealed class Customer : BaseEntity
         bool isReseller,
         Guid? groupId,
         Guid? userId = null,
-        CustomerOwnerType ownerType = CustomerOwnerType.CurrentUser)
+        CustomerOwnerType ownerType = CustomerOwnerType.CurrentUser,
+        CustomerNotificationChannel preferredNotificationChannel = CustomerNotificationChannel.Sms)
         : base(Guid.NewGuid())
     {
         ApplyProfile(
@@ -42,11 +43,17 @@ public sealed class Customer : BaseEntity
             address);
 
         SetRelations(ownerUserId, parentCustomerId, isReseller, groupId, userId, ownerType);
+        PreferredNotificationChannel = preferredNotificationChannel;
     }
 
     public CustomerType Type { get; private set; }
 
     public CustomerOwnerType OwnerType { get; private set; } = CustomerOwnerType.CurrentUser;
+
+    public Guid? OwnerId => OwnerUserId;
+
+    public CustomerNotificationChannel PreferredNotificationChannel { get; private set; } =
+        CustomerNotificationChannel.Sms;
 
     public string? FirstName { get; private set; }
 
@@ -105,7 +112,8 @@ public sealed class Customer : BaseEntity
         Guid? userId,
         DateTime utcNow,
         Guid? updatedByUserId,
-        CustomerOwnerType ownerType = CustomerOwnerType.CurrentUser)
+        CustomerOwnerType ownerType = CustomerOwnerType.CurrentUser,
+        CustomerNotificationChannel preferredNotificationChannel = CustomerNotificationChannel.Sms)
     {
         if (parentCustomerId == Id)
         {
@@ -125,6 +133,7 @@ public sealed class Customer : BaseEntity
             address);
 
         SetRelations(ownerUserId, parentCustomerId, isReseller, groupId, userId, ownerType);
+        PreferredNotificationChannel = preferredNotificationChannel;
         MarkUpdated(updatedByUserId, utcNow);
     }
 

@@ -159,13 +159,13 @@ export function useCustomerServiceRequests(customerId: string | undefined) {
   });
 }
 
-export function useRecentServiceRequests(salesExpertId?: string) {
+export function useRecentServiceRequests(salesExpertId?: string, limit = 10) {
   return useQuery({
-    queryKey: ["sales", "recent-service-requests", salesExpertId],
+    queryKey: ["sales", "recent-service-requests", salesExpertId, limit],
     queryFn: async () => {
       const response = await api.get<ApiEnvelope<ServiceRequestSummary[]>>(
         "/sales/service-requests",
-        { params: { salesExpertId: salesExpertId || undefined, limit: 10 } },
+        { params: { salesExpertId: salesExpertId || undefined, limit } },
       );
       return response.data.data ?? [];
     },

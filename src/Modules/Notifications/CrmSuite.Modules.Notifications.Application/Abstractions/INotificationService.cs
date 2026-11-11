@@ -20,6 +20,16 @@ public interface INotificationService
     Task<NotificationSendResult> SendAsync(
         NotificationRequest request,
         CancellationToken cancellationToken);
+
+    Task<NotificationSendResult> SendSms(
+        string mobile,
+        string message,
+        CancellationToken cancellationToken = default);
+
+    Task<NotificationSendResult> SendBale(
+        string chatId,
+        string message,
+        CancellationToken cancellationToken = default);
 }
 
 public interface INotificationSender

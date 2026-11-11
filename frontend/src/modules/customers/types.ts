@@ -1,4 +1,12 @@
 export type CustomerType = "Natural" | "Legal";
+export type CustomerOwnerType =
+  | "CurrentUser"
+  | "CompanyReferred"
+  | "CompanyCustomer"
+  | "FollowUp"
+  | "Company"
+  | "SalesExpert";
+export type CustomerNotificationChannel = "Sms" | "Bale";
 
 export interface CustomerTag {
   id: string;
@@ -56,6 +64,9 @@ export interface CustomerDetail {
   createdAtJalali: string;
   updatedAt?: string | null;
   updatedAtJalali?: string | null;
+  ownerType?: CustomerOwnerType;
+  ownerId?: string | null;
+  preferredNotificationChannel?: CustomerNotificationChannel;
 }
 
 export interface CustomerListParams {
@@ -82,6 +93,8 @@ export interface CustomerPayload {
   isReseller: boolean;
   groupId?: string | null;
   tagIds?: string[];
+  ownerType?: CustomerOwnerType;
+  preferredNotificationChannel?: CustomerNotificationChannel;
 }
 
 export interface UserOption {

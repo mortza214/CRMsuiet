@@ -74,6 +74,56 @@ public sealed partial class NotificationService : INotificationService
         }
     }
 
+    public Task<NotificationSendResult> SendSms(
+        string mobile,
+        string message,
+        CancellationToken cancellationToken = default) =>
+        SendDirectAsync(NotificationChannel.Sms, mobile, message, cancellationToken);
+
+    public Task<NotificationSendResult> SendBale(
+        string chatId,
+        string message,
+        CancellationToken cancellationToken = default) =>
+        SendDirectAsync(NotificationChannel.Bale, chatId, message, cancellationToken);
+
+    private async Task<NotificationSendResult> SendDirectAsync(
+        NotificationChannel channel,
+        string recipient,
+        string message,
+        CancellationToken cancellationToken)
+    {
+        var log = new NotificationLog(
+            recipient,
+            channel,
+            $"direct-{channel}".ToLowerInvariant(),
+            message,
+            null,
+            DateTime.UtcNow);
+        _logs.Add(log);
+        await _unitOfWork.SaveChangesAsync(cancellationToken);
+
+        if (!_senders.TryGetValue(channel, out var sender))
+        {
+            log.MarkFailed("Sender برای این کانال ثبت نشده است.", DateTime.UtcNow);
+            await _unitOfWork.SaveChangesAsync(cancellationToken);
+            return new NotificationSendResult(log.Id, message, NotificationStatus.Failed, log.ErrorMessage);
+        }
+
+        try
+        {
+            await sender.SendAsync(recipient, message, cancellationToken);
+            log.MarkSent(DateTime.UtcNow);
+            await _unitOfWork.SaveChangesAsync(cancellationToken);
+            return new NotificationSendResult(log.Id, message, NotificationStatus.Sent, null);
+        }
+        catch (Exception exception)
+        {
+            log.MarkFailed(exception.Message, DateTime.UtcNow);
+            await _unitOfWork.SaveChangesAsync(cancellationToken);
+            return new NotificationSendResult(log.Id, message, NotificationStatus.Failed, exception.Message);
+        }
+    }
+
     private static string Render(
         string body,
         IReadOnlyDictionary<string, string> variables) =>

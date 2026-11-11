@@ -21,4 +21,6 @@ public sealed record CreateCustomerCommand(
     bool IsReseller = false,
     Guid? GroupId = null,
     IReadOnlyCollection<Guid>? TagIds = null,
-    CustomerOwnerType OwnerType = CustomerOwnerType.CurrentUser) : IRequest<Result<CustomerDto>>;
+    CustomerOwnerType OwnerType = CustomerOwnerType.CurrentUser,
+    CustomerNotificationChannel PreferredNotificationChannel = CustomerNotificationChannel.Sms)
+    : IRequest<Result<CustomerDto>>;

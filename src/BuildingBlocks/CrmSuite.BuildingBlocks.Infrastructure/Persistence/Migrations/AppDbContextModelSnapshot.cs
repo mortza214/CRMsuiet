@@ -990,6 +990,12 @@ namespace CrmSuite.BuildingBlocks.Infrastructure.Persistence.Migrations
                         .HasColumnType("varchar(30)")
                         .HasColumnName("phone");
 
+                    b.Property<string>("PreferredNotificationChannel")
+                        .IsRequired()
+                        .HasMaxLength(20)
+                        .HasColumnType("varchar(20)")
+                        .HasColumnName("preferred_notification_channel");
+
                     b.Property<string>("Type")
                         .IsRequired()
                         .HasMaxLength(20)

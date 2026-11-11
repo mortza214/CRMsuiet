@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import {
   ApartmentOutlined,
   EyeOutlined,
@@ -24,6 +24,7 @@ import {
 } from "antd";
 import { useNavigate } from "react-router-dom";
 import { useAuthStore } from "@/modules/auth/store";
+import { useFormSubmissions } from "@/modules/forms/hooks/useForms";
 import { useDepartments } from "@/modules/tickets/hooks/useTickets";
 import { useDepartments as useSettingsDepartments } from "@/modules/settings/hooks/useSettings";
 import { WorkflowFormRenderer } from "../components/WorkflowFormRenderer";
@@ -86,6 +87,24 @@ export function WorkflowInbox() {
   );
   const expertCandidates =
     technicalExperts.length > 0 ? technicalExperts : (expertsQuery.data ?? []);
+  const previousForms = useFormSubmissions(
+    {
+      page: 1,
+      pageSize: 5,
+      entityType: "Order",
+      entityId: selectedTask?.entityId,
+    },
+    selectedTaskAction?.actionKey === "ReviewFeasibility",
+  );
+  const previousFormData = useMemo(() => {
+    const json = previousForms.data?.items?.[0]?.submittedDataJson;
+    if (!json) return {};
+    try {
+      return JSON.parse(json) as Record<string, unknown>;
+    } catch {
+      return {};
+    }
+  }, [previousForms.data]);
   const execute = useExecuteWorkflowAction(selectedTask?.instanceId);
 
   const openAction = (task: WorkflowTask) => {
@@ -324,7 +343,8 @@ export function WorkflowInbox() {
             <>
               <WorkflowFormRenderer
                 formCode={selectedTaskAction?.formCode}
-                onDataChange={setActionData}
+                values={previousFormData}
+                readOnly
               />
               {actionData.needs_visit === "yes" && (
                 <Form.Item label="کارشناس فنی" required>

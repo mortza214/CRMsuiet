@@ -33,6 +33,7 @@ import {
 } from "antd";
 import { DepartmentModal } from "@/modules/settings/components/DepartmentModal";
 import { IppanelSettingsTab } from "@/modules/settings/components/IppanelSettingsTab";
+import { NotificationSettingsTab } from "@/modules/settings/components/NotificationSettingsTab";
 import { RoleModal } from "@/modules/settings/components/RoleModal";
 import { RolePermissionsDrawer } from "@/modules/settings/components/RolePermissionsDrawer";
 import { TaxRuleModal } from "@/modules/settings/components/TaxRuleModal";
@@ -798,6 +799,16 @@ export function SettingsPage() {
                       </span>
                     ),
                     children: <IppanelSettingsTab />,
+                  },
+                  {
+                    key: "notifications",
+                    forceRender: true,
+                    label: (
+                      <span>
+                        <MessageOutlined /> اطلاع‌رسانی
+                      </span>
+                    ),
+                    children: <NotificationSettingsTab />,
                   },
                 ]
               : []),

@@ -45,7 +45,9 @@ public sealed class CustomerDtoMapper
             _jalaliDate.ToJalali(createdAt),
             updatedAt,
             updatedAt.HasValue ? _jalaliDate.ToJalali(updatedAt.Value) : null,
-            customer.OwnerType.ToString());
+            customer.OwnerType.ToString(),
+            customer.OwnerUserId,
+            customer.PreferredNotificationChannel.ToString());
     }
 
     public CustomerGroupDto ToGroupDto(CustomerGroup group)

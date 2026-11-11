@@ -33,6 +33,7 @@ public sealed class CreateCustomerRequest
     public Guid? GroupId { get; init; }
 
     public CustomerOwnerType OwnerType { get; init; } = CustomerOwnerType.CurrentUser;
+    public CustomerNotificationChannel PreferredNotificationChannel { get; init; } = CustomerNotificationChannel.Sms;
 
     public List<Guid>? TagIds { get; init; }
 }
@@ -68,6 +69,7 @@ public sealed class UpdateCustomerRequest
     public Guid? GroupId { get; init; }
 
     public CustomerOwnerType OwnerType { get; init; } = CustomerOwnerType.CurrentUser;
+    public CustomerNotificationChannel PreferredNotificationChannel { get; init; } = CustomerNotificationChannel.Sms;
 
     public List<Guid>? TagIds { get; init; }
 }

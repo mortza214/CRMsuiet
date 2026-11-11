@@ -91,7 +91,8 @@ public sealed class CreateCustomerCommandHandler
             request.IsReseller,
             request.GroupId,
             null,
-            request.OwnerType);
+            request.OwnerType,
+            request.PreferredNotificationChannel);
 
         customer.MarkCreated(_currentUser.UserId, now);
 

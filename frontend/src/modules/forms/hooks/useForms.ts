@@ -138,7 +138,7 @@ export function useFormSubmissions(params: {
   entityType?: FormEntityType;
   entityId?: string;
   status?: FormSubmissionStatus;
-}) {
+}, enabled = true) {
   return useQuery({
     queryKey: ["forms", "submissions", params],
     queryFn: async () => {
@@ -158,6 +158,7 @@ export function useFormSubmissions(params: {
       );
       return response.data.data as PagedResult<FormSubmission>;
     },
+    enabled,
   });
 }
 

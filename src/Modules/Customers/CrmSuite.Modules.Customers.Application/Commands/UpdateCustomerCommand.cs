@@ -21,4 +21,7 @@ public sealed record UpdateCustomerCommand(
     Guid? ParentCustomerId = null,
     bool IsReseller = false,
     Guid? GroupId = null,
-    IReadOnlyCollection<Guid>? TagIds = null) : IRequest<Result<CustomerDto>>;
+    IReadOnlyCollection<Guid>? TagIds = null,
+    CustomerOwnerType OwnerType = CustomerOwnerType.CurrentUser,
+    CustomerNotificationChannel PreferredNotificationChannel = CustomerNotificationChannel.Sms)
+    : IRequest<Result<CustomerDto>>;

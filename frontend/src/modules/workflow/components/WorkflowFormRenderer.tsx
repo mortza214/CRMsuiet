@@ -23,6 +23,7 @@ interface SchemaField {
 interface Props {
   formCode?: string;
   schemaJson?: string | null;
+  readOnly?: boolean;
   values?: Record<string, unknown>;
   onChange?: (values: Record<string, unknown>) => void;
   onDataChange?: (values: Record<string, unknown>) => void;
@@ -64,6 +65,7 @@ function visible(field: SchemaField, values: Record<string, unknown>) {
 export function WorkflowFormRenderer({
   formCode,
   schemaJson,
+  readOnly = false,
   values,
   onChange,
   onDataChange,
@@ -108,6 +110,7 @@ export function WorkflowFormRenderer({
                   options={field.options}
                   placeholder={field.label}
                   allowClear={!field.required}
+                  disabled={readOnly}
                 />
               ) : field.type === "number" ? (
                 <InputNumber
@@ -115,10 +118,12 @@ export function WorkflowFormRenderer({
                   value={typeof actualValues[field.key] === "number" ? (actualValues[field.key] as number) : undefined}
                   onChange={(value) => update(field.key, value)}
                   placeholder={field.label}
+                  disabled={readOnly}
                 />
               ) : field.type === "checkbox" ? (
                 <Checkbox
                   checked={Boolean(actualValues[field.key])}
+                  disabled={readOnly}
                   onChange={(event) => update(field.key, event.target.checked)}
                 >
                   {field.label}
@@ -126,6 +131,7 @@ export function WorkflowFormRenderer({
               ) : field.type === "date" ? (
                 <DatePicker
                   style={{ width: "100%" }}
+                  disabled={readOnly}
                   onChange={(value: Dayjs | null) =>
                     update(field.key, value ? value.toISOString() : null)
                   }
@@ -136,6 +142,7 @@ export function WorkflowFormRenderer({
                   value={String(actualValues[field.key] ?? "")}
                   onChange={(event) => update(field.key, event.target.value)}
                   placeholder={field.label}
+                  disabled={readOnly}
                 />
               ) : (
                 <Input
