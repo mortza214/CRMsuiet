@@ -1,6 +1,10 @@
 using CrmSuite.BuildingBlocks.Domain.Results;
 using CrmSuite.Modules.Workflow.Application.Abstractions;
+using CrmSuite.Modules.Workflow.Domain.Entities;
 using CrmSuite.Modules.Workflow.Domain.Enums;
+using CrmSuite.Modules.Identity.Application.Abstractions;
+using CrmSuite.BuildingBlocks.Application.Abstractions;
+using FoundationCurrentUser = CrmSuite.Modules.Foundation.Application.Abstractions.ICurrentUserService;
 using MediatR;
 
 namespace CrmSuite.Modules.Workflow.Application.Commands;
@@ -14,15 +18,27 @@ public sealed class AdvanceToFinanceReviewCommandHandler
     private readonly IWorkflowInstanceRepository _instances;
     private readonly IWorkflowDefinitionRepository _definitions;
     private readonly IMediator _mediator;
+    private readonly IWorkflowUnitOfWork _unitOfWork;
+    private readonly IRoleRepository _roles;
+    private readonly IDateTimeProvider _clock;
+    private readonly FoundationCurrentUser _currentUser;
 
     public AdvanceToFinanceReviewCommandHandler(
         IWorkflowInstanceRepository instances,
         IWorkflowDefinitionRepository definitions,
-        IMediator mediator)
+        IMediator mediator,
+        IWorkflowUnitOfWork unitOfWork,
+        IRoleRepository roles,
+        IDateTimeProvider clock,
+        FoundationCurrentUser currentUser)
     {
         _instances = instances;
         _definitions = definitions;
         _mediator = mediator;
+        _unitOfWork = unitOfWork;
+        _roles = roles;
+        _clock = clock;
+        _currentUser = currentUser;
     }
 
     public async Task<Result> Handle(
@@ -63,9 +79,32 @@ public sealed class AdvanceToFinanceReviewCommandHandler
             && definition.FindState(item.ToStateId).Code == "FINANCE_REVIEW");
         if (transition is null)
         {
-            return Result.Failure(
-                "گذار تایید مالی در تعریف گردش کار وجود ندارد.",
-                "WORKFLOW_FINANCE_TRANSITION_NOT_FOUND");
+            var roles = await _roles.GetAllAsync(includePermissions: false, cancellationToken);
+            var financeRole = roles.FirstOrDefault(role => role.Name == "FinanceExpert");
+            if (financeRole is null)
+            {
+                return Result.Failure(
+                    "گذار تایید مالی و نقش کارشناس مالی در دسترس نیست.",
+                    "WORKFLOW_FINANCE_FALLBACK_UNAVAILABLE");
+            }
+
+            if (!instance.Tasks.Any(task =>
+                    task.Status == WorkflowTaskStatus.Pending
+                    && task.AssignedRoleId == financeRole.Id))
+            {
+                instance.AddTask(new WorkflowTask(
+                    instance.Id,
+                    current.Id,
+                    null,
+                    financeRole.Id,
+                    null,
+                    null,
+                    _currentUser.UserId,
+                    _clock.UtcNow));
+                await _unitOfWork.SaveChangesAsync(cancellationToken);
+            }
+
+            return Result.Success("تسک بررسی مالی به صورت جایگزین ایجاد شد.");
         }
 
         var moved = await _mediator.Send(

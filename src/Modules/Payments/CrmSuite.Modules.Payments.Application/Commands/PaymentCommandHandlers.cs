@@ -13,6 +13,7 @@ using CrmSuite.Modules.Workflow.Application.Commands;
 using CrmSuite.Modules.Payments.Domain.Entities;
 using CrmSuite.Modules.Payments.Domain.Enums;
 using MediatR;
+using Microsoft.Extensions.Logging;
 using FoundationCurrentUser = CrmSuite.Modules.Foundation.Application.Abstractions.ICurrentUserService;
 
 namespace CrmSuite.Modules.Payments.Application.Commands;
@@ -29,6 +30,7 @@ public sealed class CreateManualPaymentCommandHandler
     private readonly IDateTimeProvider _clock;
     private readonly PaymentDtoMapper _mapper;
     private readonly IMediator? _mediator;
+    private readonly ILogger<CreateManualPaymentCommandHandler>? _logger;
 
     public CreateManualPaymentCommandHandler(
         ITransactionRepository transactions,
@@ -39,7 +41,8 @@ public sealed class CreateManualPaymentCommandHandler
         FoundationCurrentUser currentUser,
         IDateTimeProvider clock,
         PaymentDtoMapper mapper,
-        IMediator? mediator = null)
+        IMediator? mediator = null,
+        ILogger<CreateManualPaymentCommandHandler>? logger = null)
     {
         _transactions = transactions;
         _invoices = invoices;
@@ -50,6 +53,7 @@ public sealed class CreateManualPaymentCommandHandler
         _clock = clock;
         _mapper = mapper;
         _mediator = mediator;
+        _logger = logger;
     }
 
     public async Task<Result<TransactionDto>> Handle(
@@ -124,16 +128,35 @@ public sealed class CreateManualPaymentCommandHandler
         {
             try
             {
-                await _mediator.Send(
-                    new AdvanceToFinanceReviewCommand(
-                        (await _invoices.GetByIdWithItemsAsync(
-                            request.InvoiceId.Value,
-                            cancellationToken))!.OrderId),
+                var invoice = await _invoices.GetByIdWithItemsAsync(
+                    request.InvoiceId.Value,
                     cancellationToken);
+                if (invoice is not null)
+                {
+                    var advance = await _mediator.Send(
+                        new AdvanceToFinanceReviewCommand(invoice.OrderId),
+                        cancellationToken);
+                    if (advance.IsFailure)
+                    {
+                        _logger?.LogError(
+                            "Finance review transition failed for order {OrderId}: {Message}",
+                            invoice.OrderId,
+                            advance.Message);
+                        return Result.Failure<TransactionDto>(
+                            "پرداخت ثبت شد، اما انتقال به مرحله بررسی مالی با خطا مواجه شد. لطفاً با پشتیبانی تماس بگیرید.",
+                            "PAYMENTS_FINANCE_TRANSITION_FAILED");
+                    }
+                }
             }
-            catch
+            catch (Exception exception)
             {
-                // Payment must remain recorded even when the workflow is in a later state.
+                _logger?.LogError(
+                    exception,
+                    "Finance review transition threw for invoice {InvoiceId}",
+                    request.InvoiceId);
+                return Result.Failure<TransactionDto>(
+                    "پرداخت ثبت شد، اما انتقال به مرحله بررسی مالی با خطا مواجه شد. لطفاً با پشتیبانی تماس بگیرید.",
+                    "PAYMENTS_FINANCE_TRANSITION_FAILED");
             }
         }
 
