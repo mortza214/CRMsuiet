@@ -16,6 +16,7 @@ public enum InvoiceStatus
     Paid = 4,
     Canceled = 5,
     PendingPayment = 6,
+    PendingVerification = 7,
 }
 
 public enum ContractStatus

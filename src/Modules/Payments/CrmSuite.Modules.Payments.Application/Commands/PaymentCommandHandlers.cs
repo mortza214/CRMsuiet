@@ -94,6 +94,10 @@ public sealed class CreateManualPaymentCommandHandler
             if (!string.IsNullOrWhiteSpace(request.ReceiptImageUrl))
             {
                 invoice.SetReceiptImageUrl(request.ReceiptImageUrl, _currentUser.UserId, now);
+                if (invoice.Status == InvoiceStatus.PendingPayment)
+                {
+                    invoice.MarkPendingVerification(_currentUser.UserId, now);
+                }
             }
         }
 

@@ -153,6 +153,19 @@ public sealed class Invoice : BaseEntity
         MarkUpdated(userId, utcNow);
     }
 
+    public void MarkPendingVerification(Guid? userId, DateTime utcNow)
+    {
+        if (Status != InvoiceStatus.PendingPayment)
+        {
+            throw new DomainException(
+                "فقط فاکتور در انتظار پرداخت قابل ارسال برای بررسی است.",
+                "BILLING_INVOICE_NOT_PENDING_PAYMENT");
+        }
+
+        Status = InvoiceStatus.PendingVerification;
+        MarkUpdated(userId, utcNow);
+    }
+
     public void RegisterPayment(decimal amount, Guid? userId, DateTime utcNow)
     {
         if (Status is InvoiceStatus.Draft or InvoiceStatus.Canceled or InvoiceStatus.Paid)
@@ -196,6 +209,10 @@ public sealed class Invoice : BaseEntity
             (InvoiceStatus.PendingPayment, InvoiceStatus.PartiallyPaid) => true,
             (InvoiceStatus.PendingPayment, InvoiceStatus.Paid) => true,
             (InvoiceStatus.PendingPayment, InvoiceStatus.Canceled) => true,
+            (InvoiceStatus.PendingPayment, InvoiceStatus.PendingVerification) => true,
+            (InvoiceStatus.PendingVerification, InvoiceStatus.Paid) => true,
+            (InvoiceStatus.PendingVerification, InvoiceStatus.PartiallyPaid) => true,
+            (InvoiceStatus.PendingVerification, InvoiceStatus.Canceled) => true,
             (InvoiceStatus.Issued, InvoiceStatus.Paid) => true,
             (InvoiceStatus.Issued, InvoiceStatus.Canceled) => true,
             (InvoiceStatus.PartiallyPaid, InvoiceStatus.Paid) => true,

@@ -7,6 +7,7 @@ export const invoiceStatusMeta: Record<
   Draft: { label: "پیش‌نویس", color: "default" },
   Issued: { label: "صادر شده", color: "blue" },
   PendingPayment: { label: "در انتظار پرداخت", color: "gold" },
+  PendingVerification: { label: "در انتظار تأیید مالی", color: "purple" },
   PartiallyPaid: { label: "پرداخت جزئی", color: "orange" },
   Paid: { label: "تسویه شده", color: "green" },
   Canceled: { label: "لغو شده", color: "red" },
