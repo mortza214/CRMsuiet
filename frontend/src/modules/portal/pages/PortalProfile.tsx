@@ -16,6 +16,7 @@ import {
 } from "antd";
 import { getPortalErrorMessage } from "@/modules/portal/api";
 import {
+  usePortalChangePassword,
   usePortalProfile,
   usePortalUpdateProfile,
 } from "@/modules/portal/hooks/usePortal";
@@ -30,8 +31,11 @@ export function PortalProfile() {
   const { message } = App.useApp();
   const [editOpen, setEditOpen] = useState(false);
   const [form] = Form.useForm<ProfileForm>();
+  const [passwordOpen, setPasswordOpen] = useState(false);
+  const [passwordForm] = Form.useForm<{ currentPassword: string; newPassword: string }>();
   const profile = usePortalProfile();
   const updateProfile = usePortalUpdateProfile();
+  const changePassword = usePortalChangePassword();
 
   useEffect(() => {
     if (!editOpen || !profile.data) return;
@@ -85,13 +89,16 @@ export function PortalProfile() {
             اطلاعات حساب و راه‌های ارتباطی شما
           </Typography.Text>
         </div>
-        <Button
-          type="primary"
-          icon={<EditOutlined />}
-          onClick={() => setEditOpen(true)}
-        >
-          ویرایش اطلاعات
-        </Button>
+        <Space>
+          <Button onClick={() => setPasswordOpen(true)}>تغییر رمز عبور</Button>
+          <Button
+            type="primary"
+            icon={<EditOutlined />}
+            onClick={() => setEditOpen(true)}
+          >
+            ویرایش اطلاعات
+          </Button>
+        </Space>
       </div>
 
       <Card className="portal-profile-card" variant="borderless">
@@ -141,6 +148,38 @@ export function PortalProfile() {
           </Descriptions.Item>
         </Descriptions>
       </Card>
+
+      <Modal
+        title="تغییر رمز عبور"
+        open={passwordOpen}
+        onCancel={() => setPasswordOpen(false)}
+        onOk={() => passwordForm.submit()}
+        okText="ذخیره رمز جدید"
+        cancelText="انصراف"
+        confirmLoading={changePassword.isPending}
+      >
+        <Form
+          form={passwordForm}
+          layout="vertical"
+          onFinish={async (values) => {
+            try {
+              await changePassword.mutateAsync(values);
+              message.success("رمز عبور تغییر کرد.");
+              setPasswordOpen(false);
+              passwordForm.resetFields();
+            } catch (error) {
+              message.error(getPortalErrorMessage(error));
+            }
+          }}
+        >
+          <Form.Item name="currentPassword" label="رمز عبور فعلی" rules={[{ required: true }]}>
+            <Input.Password dir="ltr" />
+          </Form.Item>
+          <Form.Item name="newPassword" label="رمز عبور جدید" rules={[{ required: true, min: 6 }]}>
+            <Input.Password dir="ltr" />
+          </Form.Item>
+        </Form>
+      </Modal>
 
       <Modal
         title="ویرایش اطلاعات"

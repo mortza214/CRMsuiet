@@ -48,6 +48,17 @@ public sealed class CustomersController : ControllerBase
         return this.ToApiResult(result, "پروفایل با موفقیت به‌روزرسانی شد.");
     }
 
+    [HttpPost("me/change-password")]
+    public async Task<IActionResult> ChangePassword(
+        [FromBody] CustomerChangePasswordRequest request,
+        CancellationToken cancellationToken)
+    {
+        var result = await _mediator.Send(
+            new CustomerChangePasswordCommand(request.CurrentPassword, request.NewPassword),
+            cancellationToken);
+        return this.ToApiResult(result, "رمز عبور تغییر کرد.");
+    }
+
     [HttpGet("my-sub-customers")]
     [ProducesResponseType(typeof(ApiResponse<IReadOnlyList<CustomerDto>>), StatusCodes.Status200OK)]
     public async Task<IActionResult> GetMySubCustomers(CancellationToken cancellationToken)

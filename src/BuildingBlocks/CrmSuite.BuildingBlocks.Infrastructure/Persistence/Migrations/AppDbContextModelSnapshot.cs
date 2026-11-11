@@ -985,6 +985,11 @@ namespace CrmSuite.BuildingBlocks.Infrastructure.Persistence.Migrations
                         .HasColumnType("char(36)")
                         .HasColumnName("parent_customer_id");
 
+                    b.Property<string>("PasswordHash")
+                        .HasMaxLength(200)
+                        .HasColumnType("varchar(200)")
+                        .HasColumnName("password_hash");
+
                     b.Property<string>("Phone")
                         .HasMaxLength(30)
                         .HasColumnType("varchar(30)")

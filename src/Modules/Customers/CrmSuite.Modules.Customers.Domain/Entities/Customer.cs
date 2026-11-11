@@ -55,6 +55,8 @@ public sealed class Customer : BaseEntity
     public CustomerNotificationChannel PreferredNotificationChannel { get; private set; } =
         CustomerNotificationChannel.Sms;
 
+    public string? PasswordHash { get; private set; }
+
     public string? FirstName { get; private set; }
 
     public string? LastName { get; private set; }
@@ -150,6 +152,12 @@ public sealed class Customer : BaseEntity
     }
 
     public void SetPortalUserId(Guid userId) => UserId = userId;
+
+    public void SetPasswordHash(string passwordHash, Guid? userId, DateTime utcNow)
+    {
+        PasswordHash = string.IsNullOrWhiteSpace(passwordHash) ? null : passwordHash;
+        MarkUpdated(userId, utcNow);
+    }
 
     public void ReplaceTags(IEnumerable<Guid> tagIds)
     {

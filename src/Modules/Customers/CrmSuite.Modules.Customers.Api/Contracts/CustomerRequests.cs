@@ -131,3 +131,17 @@ public sealed class VerifyOtpRequest
 
     public string Code { get; init; } = string.Empty;
 }
+
+public sealed class CustomerPasswordLoginRequest
+{
+    public string Mobile { get; init; } = string.Empty;
+
+    public string Password { get; init; } = string.Empty;
+}
+
+public sealed class CustomerChangePasswordRequest
+{
+    public string CurrentPassword { get; init; } = string.Empty;
+
+    public string NewPassword { get; init; } = string.Empty;
+}

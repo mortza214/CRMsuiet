@@ -69,6 +69,10 @@ public sealed class CustomerConfiguration : BaseEntityConfiguration<Customer>
             .HasMaxLength(30)
             .IsRequired();
 
+        builder.Property(customer => customer.PasswordHash)
+            .HasColumnName("password_hash")
+            .HasMaxLength(200);
+
         builder.Property(customer => customer.PreferredNotificationChannel)
             .HasColumnName("preferred_notification_channel")
             .HasConversion<string>()

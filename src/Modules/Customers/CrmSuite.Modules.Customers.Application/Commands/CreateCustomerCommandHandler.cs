@@ -5,7 +5,9 @@ using CrmSuite.Modules.Customers.Application.Dtos;
 using CrmSuite.Modules.Customers.Application.Mapping;
 using CrmSuite.Modules.Customers.Application.Notifications;
 using CrmSuite.Modules.Customers.Domain.Entities;
+using CrmSuite.Modules.Customers.Domain.Enums;
 using CrmSuite.Modules.Foundation.Application.Abstractions;
+using CrmSuite.Modules.Identity.Application.Abstractions;
 using MediatR;
 using FoundationCurrentUser = CrmSuite.Modules.Foundation.Application.Abstractions.ICurrentUserService;
 
@@ -24,6 +26,7 @@ public sealed class CreateCustomerCommandHandler
     private readonly IDateTimeProvider _clock;
     private readonly CustomerDtoMapper _mapper;
     private readonly IMediator? _mediator;
+    private readonly IPasswordHasher? _passwordHasher;
 
     public CreateCustomerCommandHandler(
         ICustomerRepository customers,
@@ -35,7 +38,8 @@ public sealed class CreateCustomerCommandHandler
         FoundationCurrentUser currentUser,
         IDateTimeProvider clock,
         CustomerDtoMapper mapper,
-        IMediator? mediator = null)
+        IMediator? mediator = null,
+        IPasswordHasher? passwordHasher = null)
     {
         _customers = customers;
         _groups = groups;
@@ -47,6 +51,7 @@ public sealed class CreateCustomerCommandHandler
         _clock = clock;
         _mapper = mapper;
         _mediator = mediator;
+        _passwordHasher = passwordHasher;
     }
 
     public async Task<Result<CustomerDto>> Handle(
@@ -95,6 +100,17 @@ public sealed class CreateCustomerCommandHandler
             request.PreferredNotificationChannel);
 
         customer.MarkCreated(_currentUser.UserId, now);
+        if (_passwordHasher is not null)
+        {
+            var defaultPassword = request.Type == CustomerType.Natural
+                                  && !string.IsNullOrWhiteSpace(request.NationalId)
+                ? request.NationalId
+                : "123456";
+            customer.SetPasswordHash(
+                _passwordHasher.Hash(defaultPassword),
+                _currentUser.UserId,
+                now);
+        }
 
         var identityResult = await _identity.EnsurePortalUserAsync(customer, cancellationToken);
         if (identityResult.IsFailure)

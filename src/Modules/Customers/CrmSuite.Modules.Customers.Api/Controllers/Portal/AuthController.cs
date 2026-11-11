@@ -34,6 +34,18 @@ public sealed class AuthController : ControllerBase
         return this.ToApiResult(result, "کد ورود ارسال شد.");
     }
 
+    [HttpPost("login-password")]
+    [ProducesResponseType(typeof(ApiResponse<CustomerAuthResultDto>), StatusCodes.Status200OK)]
+    public async Task<IActionResult> LoginWithPassword(
+        [FromBody] CustomerPasswordLoginRequest request,
+        CancellationToken cancellationToken)
+    {
+        var result = await _mediator.Send(
+            new CustomerLoginWithPasswordCommand(request.Mobile, request.Password),
+            cancellationToken);
+        return this.ToApiResult(result, "ورود با موفقیت انجام شد.");
+    }
+
     [HttpPost("verify-otp")]
     [ProducesResponseType(typeof(ApiResponse<CustomerAuthResultDto>), StatusCodes.Status200OK)]
     public async Task<IActionResult> VerifyOtp(

@@ -5,6 +5,7 @@ import {
   Button,
   Card,
   Form,
+  Segmented,
   Input,
   Space,
   Steps,
@@ -32,7 +33,9 @@ export function PortalLogin() {
   const [step, setStep] = useState(0);
   const [mobile, setMobile] = useState("");
   const [code, setCode] = useState("");
+  const [loginMode, setLoginMode] = useState<"otp" | "password">("otp");
   const [mobileForm] = Form.useForm<MobileForm>();
+  const [passwordForm] = Form.useForm<{ mobile: string; password: string }>();
 
   const requestOtp = useMutation({
     mutationFn: async (mobileNumber: string) => {
@@ -43,6 +46,27 @@ export function PortalLogin() {
       return response.data.data;
     },
   });
+
+  const loginWithPassword = useMutation({
+    mutationFn: async (payload: { mobile: string; password: string }) => {
+      const response = await portalApi.post<ApiEnvelope<PortalAuthResult>>(
+        "/portal/auth/login-password",
+        payload,
+      );
+      return response.data.data as PortalAuthResult;
+    },
+  });
+
+  const submitPassword = async (values: { mobile: string; password: string }) => {
+    try {
+      const result = await loginWithPassword.mutateAsync(values);
+      login(result);
+      message.success("ورود با موفقیت انجام شد.");
+      navigate("/portal/dashboard", { replace: true });
+    } catch (error) {
+      message.error(getPortalErrorMessage(error) || "رمز عبور یا شماره موبایل صحیح نیست.");
+    }
+  };
 
   const verifyOtp = useMutation({
     mutationFn: async (payload: { mobile: string; code: string }) => {
@@ -100,6 +124,50 @@ export function PortalLogin() {
           </Typography.Text>
         </div>
 
+        <Segmented
+          block
+          value={loginMode}
+          onChange={(value) => setLoginMode(value as "otp" | "password")}
+          options={[
+            { value: "otp", label: "ورود با کد یکبار مصرف" },
+            { value: "password", label: "ورود با رمز عبور" },
+          ]}
+          style={{ marginBottom: 16 }}
+        />
+
+        {loginMode === "password" ? (
+          <Form
+            form={passwordForm}
+            layout="vertical"
+            onFinish={submitPassword}
+            requiredMark={false}
+          >
+            <Form.Item
+              name="mobile"
+              label="شماره موبایل"
+              rules={[
+                { required: true, message: "شماره موبایل را وارد کنید." },
+                { pattern: /^09\d{9}$/, message: "شماره موبایل معتبر نیست." },
+              ]}
+            >
+              <Input size="large" prefix={<MobileOutlined />} placeholder="09xxxxxxxxx" dir="ltr" />
+            </Form.Item>
+            <Form.Item
+              name="password"
+              label="رمز عبور"
+              rules={[{ required: true, message: "رمز عبور را وارد کنید." }]}
+            >
+              <Input.Password size="large" prefix={<LockOutlined />} dir="ltr" />
+            </Form.Item>
+            <Typography.Text type="secondary" style={{ display: "block", marginBottom: 12 }}>
+              رمز عبور پیش‌فرض، کد ملی شماست.
+            </Typography.Text>
+            <Button type="primary" size="large" block htmlType="submit" loading={loginWithPassword.isPending}>
+              ورود به پورتال
+            </Button>
+          </Form>
+        ) : (
+        <>
         <Steps
           current={step}
           size="small"
@@ -186,6 +254,8 @@ export function PortalLogin() {
               در محیط توسعه، کد تایید در لاگ سرور ثبت می‌شود.
             </Typography.Text>
           </Space>
+        )}
+        </>
         )}
       </Card>
     </div>

@@ -246,6 +246,18 @@ export function usePortalServices() {
   });
 }
 
+export function usePortalChangePassword() {
+  return useMutation({
+    mutationFn: async (payload: { currentPassword: string; newPassword: string }) => {
+      const response = await portalApi.post<ApiEnvelope<unknown>>(
+        "/portal/customers/me/change-password",
+        payload,
+      );
+      return response.data;
+    },
+  });
+}
+
 export function usePortalUpdateProfile() {
   const queryClient = useQueryClient();
 
