@@ -277,6 +277,21 @@ export function useResetTestData() {
   });
 }
 
+export function useResetRequests() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async () => {
+      const response = await api.post<ApiEnvelope<unknown>>(
+        "/system/reset-requests",
+      );
+      return response.data.data;
+    },
+    onSuccess: async () => {
+      await queryClient.invalidateQueries();
+    },
+  });
+}
+
 export function useIppanelSettings() {
   return useQuery({
     queryKey: ["settings", "ippanel"],

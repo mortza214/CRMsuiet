@@ -43,6 +43,7 @@ import {
   useDepartments,
   useGateways,
   usePermissions,
+  useResetRequests,
   useResetTestData,
   useRoles,
   useSettingsGroup,
@@ -121,6 +122,7 @@ export function SettingsPage() {
   const departments = useDepartments();
   const deleteDepartment = useDeleteDepartment();
   const resetTestData = useResetTestData();
+  const resetRequests = useResetRequests();
   const billingSettings = useSettingsGroup("Billing");
   const companySettings = useSettingsGroup("Company");
   const gateways = useGateways();
@@ -473,6 +475,27 @@ export function SettingsPage() {
           >
             <Button danger icon={<DeleteOutlined />} loading={resetTestData.isPending}>
               پاک‌سازی داده‌های تست
+            </Button>
+          </Popconfirm>
+        )}
+        {canResetTestData && (
+          <Popconfirm
+            title="درخواست‌ها و داده‌های تراکنشی پاک شوند؟"
+            description="Workflow، سفارش‌ها، فاکتورها، پرداخت‌ها، سرویس‌ها و FormSubmissionها حذف می‌شوند. Users، Roles، Departments، WorkflowDefinitions و FormTemplates حفظ می‌شوند."
+            okText="بله، پاک کن"
+            cancelText="انصراف"
+            onConfirm={async () => {
+              try {
+                await resetRequests.mutateAsync();
+                message.success("درخواست‌ها و داده‌های تراکنشی پاک شدند.");
+                window.location.reload();
+              } catch {
+                // NotificationProvider handles errors.
+              }
+            }}
+          >
+            <Button danger loading={resetRequests.isPending}>
+              پاک‌سازی درخواست‌ها (تست)
             </Button>
           </Popconfirm>
         )}

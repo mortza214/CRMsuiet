@@ -5,6 +5,7 @@ import type {
   FormDefinitionStatus,
   FormEntityType,
   FormSubmission,
+  FormSubmissionHistory,
   FormSubmissionStatus,
   FormTemplate,
   PagedResult,
@@ -198,3 +199,16 @@ export const submissionStatusLabels: Record<FormSubmissionStatus, string> = {
   Approved: "تأیید شده",
   Rejected: "رد شده",
 };
+
+export function useFormSubmissionHistory(id: string | undefined) {
+  return useQuery({
+    queryKey: ["forms", "submission-history", id],
+    queryFn: async () => {
+      const response = await api.get<ApiEnvelope<FormSubmissionHistory[]>>(
+        `/forms/submissions/${id}/history`,
+      );
+      return response.data.data ?? [];
+    },
+    enabled: Boolean(id),
+  });
+}

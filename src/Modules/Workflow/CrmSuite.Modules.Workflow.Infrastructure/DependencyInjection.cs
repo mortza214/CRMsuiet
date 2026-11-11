@@ -41,6 +41,7 @@ public static class DependencyInjection
         services.AddScoped<IWorkflowAction, PayInvoiceAction>();
         services.AddScoped<IWorkflowAction, VerifyPaymentAction>();
         services.AddScoped<IWorkflowAction, SignContractAction>();
+        services.AddScoped<IWorkflowAction, ReviewInstallationAction>();
         services.AddScoped<IWorkflowEntityDisplayResolver, WorkflowEntityDisplayResolver>();
 
         return services;

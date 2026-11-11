@@ -101,3 +101,33 @@ public sealed class GetFormSubmissionsQueryHandler
         return Result.Success(page);
     }
 }
+
+public sealed class GetFormSubmissionHistoryQueryHandler
+    : IRequestHandler<GetFormSubmissionHistoryQuery, Result<IReadOnlyList<FormSubmissionHistoryDto>>>
+{
+    private readonly IFormSubmissionRepository _submissions;
+    private readonly CrmSuite.Modules.Foundation.Application.Abstractions.IJalaliDateService _jalali;
+
+    public GetFormSubmissionHistoryQueryHandler(
+        IFormSubmissionRepository submissions,
+        CrmSuite.Modules.Foundation.Application.Abstractions.IJalaliDateService jalali)
+    {
+        _submissions = submissions;
+        _jalali = jalali;
+    }
+
+    public async Task<Result<IReadOnlyList<FormSubmissionHistoryDto>>> Handle(
+        GetFormSubmissionHistoryQuery request,
+        CancellationToken cancellationToken)
+    {
+        var items = await _submissions.GetHistoryAsync(request.SubmissionId, cancellationToken);
+        return Result.Success<IReadOnlyList<FormSubmissionHistoryDto>>(
+            items.Select(item => new FormSubmissionHistoryDto(
+                item.Id,
+                item.Action,
+                item.ModifiedBy,
+                item.ModifiedAt,
+                _jalali.ToJalali(item.ModifiedAt),
+                item.PreviousDataJson)).ToArray());
+    }
+}

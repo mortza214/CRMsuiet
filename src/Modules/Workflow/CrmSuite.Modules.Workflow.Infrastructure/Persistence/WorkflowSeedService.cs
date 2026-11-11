@@ -71,83 +71,47 @@ public sealed class WorkflowSeedService
     {
         var definition = new WorkflowDefinition(
             BandwidthCode,
-            "فروش پهنای باند اختصاصی",
+            "فرایند فروش پهنای باند",
             WorkflowEntityType.Order,
-            "چرخه کامل درخواست، امکان‌سنجی، تجهیزات، پیش‌فاکتور، پرداخت، نصب، قرارداد و فعال‌سازی.",
+            "فرایند کامل فروش، امکان‌سنجی، تجهیزات، پرداخت، نصب، قرارداد و فعال‌سازی.",
             null,
             now);
 
-        var initial = definition.AddState(
-            "INITIAL_REQUEST", "درخواست اولیه", WorkflowStateType.Start, 1, false,
-            WorkflowAssigneeType.CustomerOwner, null,
-            "RequestForm", "#1677ff", WorkflowActionKey.FillForm);
-        var feasibilityPending = definition.AddState(
-            "FEASIBILITY_PENDING", "در انتظار امکان‌سنجی", WorkflowStateType.Normal, 2, false,
-            WorkflowAssigneeType.Department, technicalDepartmentId.ToString(),
-            "FeasibilityReport", "#fa8c16", WorkflowActionKey.FillForm);
-        var feasibilityReview = definition.AddState(
-            "FEASIBILITY_REVIEW", "بررسی امکان‌سنجی", WorkflowStateType.Normal, 3, false,
-            WorkflowAssigneeType.Department, technicalDepartmentId.ToString(),
-            "FeasibilityReport", "#722ed1", WorkflowActionKey.ReviewFeasibility);
-        var equipmentSupply = definition.AddState(
-            "EQUIPMENT_SUPPLY", "تأمین تجهیزات", WorkflowStateType.Normal, 4, false,
-            WorkflowAssigneeType.CustomerOwner, null, null, "#13c2c2", WorkflowActionKey.SelectEquipment);
-        var purchasePending = definition.AddState(
-            "PURCHASE_PENDING", "در انتظار خرید تجهیزات", WorkflowStateType.Normal, 5, false,
-            WorkflowAssigneeType.Department, purchaseDepartmentId.ToString(),
-            null, "#eb2f96", WorkflowActionKey.PurchaseEquipment);
-        var proforma = definition.AddState(
-            "PROFORMA", "صدور پیش‌فاکتور", WorkflowStateType.Normal, 6, false,
-            WorkflowAssigneeType.CustomerOwner, null, null, "#2f54eb", WorkflowActionKey.IssueProforma);
-        var customerApproval = definition.AddState(
-            "CUSTOMER_APPROVAL", "تأیید مشتری", WorkflowStateType.Normal, 7, false,
-            WorkflowAssigneeType.CustomerOwner, null, null, "#faad14", WorkflowActionKey.CustomerAction);
-        var cancelled = definition.AddState(
-            "CANCELLED", "منصرف شده", WorkflowStateType.End, 8, true,
-            WorkflowAssigneeType.None, null, null, "#ff4d4f");
-        var installationPending = definition.AddState(
-            "INSTALLATION_PENDING", "در انتظار مشخصات نصب", WorkflowStateType.Normal, 9, false,
-            WorkflowAssigneeType.Department, technicalDepartmentId.ToString(),
-            "InstallationSpecs", "#faad14", WorkflowActionKey.FillForm);
-        var installationInProgress = definition.AddState(
-            "INSTALLATION_IN_PROGRESS", "در حال نصب", WorkflowStateType.Normal, 10, false,
-            WorkflowAssigneeType.Department, technicalDepartmentId.ToString(),
-            "InstallationReport", "#fa8c16", WorkflowActionKey.FillForm);
-        var finalInvoice = definition.AddState(
-            "FINAL_INVOICE", "فاکتور نهایی", WorkflowStateType.Normal, 11, false,
-            WorkflowAssigneeType.CustomerOwner, null, null, "#722ed1", WorkflowActionKey.IssueFinalInvoice);
-        var paymentPending = definition.AddState(
-            "PAYMENT_PENDING", "در انتظار پرداخت", WorkflowStateType.Normal, 12, false,
-            WorkflowAssigneeType.CustomerOwner, null, null, "#f5222d", WorkflowActionKey.PayInvoice);
-        var financeReview = definition.AddState(
-            "FINANCE_REVIEW", "بررسی پرداخت مالی", WorkflowStateType.Normal, 13, false,
-            WorkflowAssigneeType.CustomerOwner, null, null, "#fa8c16", WorkflowActionKey.VerifyPayment);
-        var contract = definition.AddState(
-            "CONTRACT", "قرارداد و امضا", WorkflowStateType.Normal, 14, false,
-            WorkflowAssigneeType.CustomerOwner, null, null, "#2f54eb", WorkflowActionKey.SignContract);
-        var completed = definition.AddState(
-            "COMPLETED", "تکمیل و فعال‌سازی", WorkflowStateType.End, 15, true,
-            WorkflowAssigneeType.None, null, null, "#52c41a", WorkflowActionKey.ActivateService);
+        var initial = definition.AddState("INITIAL_REQUEST", "ثبت درخواست", WorkflowStateType.Start, 1, false, WorkflowAssigneeType.CustomerOwner, null, "RequestForm", "#1677ff", WorkflowActionKey.FillForm);
+        var salesReview = definition.AddState("SALES_REVIEW", "بررسی فروش", WorkflowStateType.Normal, 2, false, WorkflowAssigneeType.CustomerOwner, null, null, "#1677ff", WorkflowActionKey.None);
+        var feasibilityPending = definition.AddState("FEASIBILITY_PENDING", "امکان‌سنجی", WorkflowStateType.Normal, 3, false, WorkflowAssigneeType.Department, technicalDepartmentId.ToString(), "FeasibilityReport", "#fa8c16", WorkflowActionKey.FillForm);
+        var feasibilityReview = definition.AddState("FEASIBILITY_REVIEW", "تایید فنی", WorkflowStateType.Normal, 4, false, WorkflowAssigneeType.Department, technicalDepartmentId.ToString(), "FeasibilityReport", "#722ed1", WorkflowActionKey.ReviewFeasibility);
+        var equipmentSupply = definition.AddState("EQUIPMENT_SUPPLY", "تامین تجهیزات", WorkflowStateType.Normal, 5, false, WorkflowAssigneeType.CustomerOwner, null, null, "#13c2c2", WorkflowActionKey.SelectEquipment);
+        var purchasePending = definition.AddState("PURCHASE_PENDING", "خرید تجهیزات", WorkflowStateType.Normal, 6, false, WorkflowAssigneeType.Department, purchaseDepartmentId.ToString(), "PurchaseEquipmentForm", "#eb2f96", WorkflowActionKey.FillForm);
+        var proforma = definition.AddState("PROFORMA", "صدور پیش‌فاکتور", WorkflowStateType.Normal, 7, false, WorkflowAssigneeType.CustomerOwner, null, null, "#2f54eb", WorkflowActionKey.IssueProforma);
+        var customerApproval = definition.AddState("CUSTOMER_APPROVAL", "تایید مشتری", WorkflowStateType.Normal, 8, false, WorkflowAssigneeType.CustomerOwner, null, null, "#faad14", WorkflowActionKey.RequestPayment);
+        var installationPending = definition.AddState("INSTALLATION_PENDING", "مشخصات نصب", WorkflowStateType.Normal, 9, false, WorkflowAssigneeType.Department, technicalDepartmentId.ToString(), "InstallationSpecs", "#faad14", WorkflowActionKey.FillForm);
+        var installationInProgress = definition.AddState("INSTALLATION_IN_PROGRESS", "گزارش نصب", WorkflowStateType.Normal, 10, false, WorkflowAssigneeType.Department, technicalDepartmentId.ToString(), "InstallationReport", "#fa8c16", WorkflowActionKey.FillForm);
+        var installationReview = definition.AddState("INSTALLATION_REVIEW", "تایید نصب", WorkflowStateType.Normal, 11, false, WorkflowAssigneeType.Department, technicalDepartmentId.ToString(), "InstallationReport", "#722ed1", WorkflowActionKey.ReviewInstallation);
+        var finalInvoice = definition.AddState("FINAL_INVOICE", "فاکتور نهایی", WorkflowStateType.Normal, 12, false, WorkflowAssigneeType.CustomerOwner, null, null, "#722ed1", WorkflowActionKey.IssueFinalInvoice);
+        var finalPayment = definition.AddState("FINAL_PAYMENT", "پرداخت نهایی", WorkflowStateType.Normal, 13, false, WorkflowAssigneeType.CustomerOwner, null, null, "#f5222d", WorkflowActionKey.RequestPayment);
+        var financeReview = definition.AddState("FINANCE_REVIEW", "تایید مالی", WorkflowStateType.Normal, 14, false, WorkflowAssigneeType.CustomerOwner, null, null, "#fa8c16", WorkflowActionKey.VerifyPayment);
+        var contract = definition.AddState("CONTRACT", "قرارداد", WorkflowStateType.Normal, 15, false, WorkflowAssigneeType.CustomerOwner, null, null, "#2f54eb", WorkflowActionKey.SignContract);
+        var completed = definition.AddState("COMPLETED", "پایان (فعال‌سازی)", WorkflowStateType.End, 16, true, WorkflowAssigneeType.None, null, null, "#52c41a", WorkflowActionKey.ActivateService);
 
-        AddTransition(definition, initial, feasibilityPending, "ارسال به امکان‌سنجی", 1);
-        AddTransition(definition, initial, equipmentSupply, "شروع مستقیم تأمین تجهیزات", 2);
-        AddTransition(definition, feasibilityPending, feasibilityReview, "ثبت گزارش امکان‌سنجی", 3);
-        AddTransition(definition, feasibilityReview, equipmentSupply, "تأیید امکان‌سنجی", 4);
-        AddTransition(definition, equipmentSupply, purchasePending, "خرید تجهیزات", 5);
-        AddTransition(definition, equipmentSupply, proforma, "تجهیزات امانی یا موجود", 6);
-        AddTransition(definition, purchasePending, proforma, "پس از خرید تجهیزات", 7);
-        AddTransition(definition, proforma, customerApproval, "ارسال برای تأیید مشتری", 8);
-        AddTransition(definition, customerApproval, installationPending, "تأیید و نیاز به نصب", 9);
-        AddTransition(definition, customerApproval, cancelled, "انصراف مشتری", 10);
-        AddTransition(definition, installationPending, installationInProgress, "شروع نصب", 11);
-        AddTransition(definition, installationInProgress, finalInvoice, "پایان نصب", 12);
-        AddTransition(definition, finalInvoice, paymentPending, "ارسال فاکتور نهایی", 13);
-        AddTransition(definition, paymentPending, financeReview, "پرداخت با فیش واریزی", 14);
-        AddTransition(definition, paymentPending, contract, "پرداخت از درگاه", 15);
-        AddTransition(definition, paymentPending, completed, "پرداخت و تکمیل بدون قرارداد", 16);
-        AddTransition(definition, financeReview, contract, "تأیید فیش پرداخت", 17);
-        AddTransition(definition, financeReview, paymentPending, "رد فیش پرداخت", 18);
-        AddTransition(definition, contract, completed, "امضای قرارداد و تکمیل", 19);
+        AddTransition(definition, initial, salesReview, "ارسال به بررسی", 1);
+        AddTransition(definition, salesReview, feasibilityPending, "نیاز به امکان‌سنجی", 2);
+        AddTransition(definition, salesReview, equipmentSupply, "بدون امکان‌سنجی", 3);
+        AddTransition(definition, feasibilityPending, feasibilityReview, "ارسال به مدیر فنی", 4);
+        AddTransition(definition, feasibilityReview, equipmentSupply, "تایید فنی", 5);
+        AddTransition(definition, equipmentSupply, purchasePending, "نیاز به خرید", 6);
+        AddTransition(definition, equipmentSupply, proforma, "تجهیزات موجود/امانی", 7);
+        AddTransition(definition, purchasePending, proforma, "تجهیزات آماده شد", 8);
+        AddTransition(definition, proforma, customerApproval, "ارسال به مشتری", 9);
+        AddTransition(definition, customerApproval, installationPending, "تایید مشتری", 10);
+        AddTransition(definition, installationPending, installationInProgress, "ارسال به نیروی نصب", 11);
+        AddTransition(definition, installationInProgress, installationReview, "ارسال به مدیر فنی", 12);
+        AddTransition(definition, installationReview, finalInvoice, "تایید نصب", 13);
+        AddTransition(definition, finalInvoice, finalPayment, "ارسال فاکتور", 14);
+        AddTransition(definition, finalPayment, financeReview, "تایید پرداخت", 15);
+        AddTransition(definition, financeReview, contract, "نیاز به قرارداد", 16);
+        AddTransition(definition, financeReview, completed, "بدون قرارداد", 17);
+        AddTransition(definition, contract, completed, "امضای قرارداد", 18);
 
         return definition;
     }

@@ -22,6 +22,20 @@ public sealed class SystemController : ControllerBase
         _environment = environment;
     }
 
+    [HttpPost("reset-requests")]
+    public async Task<IActionResult> ResetRequests(CancellationToken cancellationToken)
+    {
+        if (!_environment.IsDevelopment())
+        {
+            return NotFound();
+        }
+
+        var result = await _resetService.ResetRequestsAsync(cancellationToken);
+        return Ok(ApiResponse<TestRequestResetResult>.Ok(
+            result,
+            "درخواست‌ها و داده‌های تراکنشی پاک شدند."));
+    }
+
     [HttpPost("reset-test-data")]
     public async Task<IActionResult> ResetTestData(CancellationToken cancellationToken)
     {

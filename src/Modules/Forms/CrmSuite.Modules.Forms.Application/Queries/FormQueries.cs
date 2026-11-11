@@ -21,3 +21,6 @@ public sealed record GetFormSubmissionsQuery(
     FormEntityType? EntityType = null,
     Guid? EntityId = null,
     FormSubmissionStatus? Status = null) : IRequest<Result<PagedResult<FormSubmissionDto>>>;
+
+public sealed record GetFormSubmissionHistoryQuery(Guid SubmissionId)
+    : IRequest<Result<IReadOnlyList<FormSubmissionHistoryDto>>>;

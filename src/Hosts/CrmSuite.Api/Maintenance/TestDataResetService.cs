@@ -25,6 +25,15 @@ public sealed record TestDataResetResult(
     int Users);
 
 /// <summary>Development-only reset used to return the database to a clean demo state.</summary>
+public sealed record TestRequestResetResult(
+    int WorkflowInstances,
+    int Orders,
+    int Invoices,
+    int Payments,
+    int Commissions,
+    int FormSubmissions,
+    int CustomerServices);
+
 public sealed class TestDataResetService
 {
     private readonly AppDbContext _dbContext;
@@ -37,6 +46,47 @@ public sealed class TestDataResetService
     public Task<TestDataResetResult> ResetAsync(CancellationToken cancellationToken) =>
         _dbContext.Database.CreateExecutionStrategy().ExecuteAsync(
             async () => await ResetCoreAsync(cancellationToken));
+
+    public Task<TestRequestResetResult> ResetRequestsAsync(CancellationToken cancellationToken) =>
+        _dbContext.Database.CreateExecutionStrategy().ExecuteAsync(
+            async () => await ResetRequestsCoreAsync(cancellationToken));
+
+    private async Task<TestRequestResetResult> ResetRequestsCoreAsync(CancellationToken cancellationToken)
+    {
+        await using var transaction = await _dbContext.Database.BeginTransactionAsync(cancellationToken);
+
+        await _dbContext.Set<FormSubmissionHistory>().ExecuteDeleteAsync(cancellationToken);
+        await _dbContext.Set<FormSubmissionItem>().ExecuteDeleteAsync(cancellationToken);
+        var formSubmissions = await _dbContext.Set<FormSubmission>().ExecuteDeleteAsync(cancellationToken);
+
+        await _dbContext.Set<WorkflowHistory>().ExecuteDeleteAsync(cancellationToken);
+        await _dbContext.Set<WorkflowTask>().ExecuteDeleteAsync(cancellationToken);
+        var workflowInstances = await _dbContext.Set<WorkflowInstance>().ExecuteDeleteAsync(cancellationToken);
+
+        await _dbContext.Set<CommissionSchedule>().ExecuteDeleteAsync(cancellationToken);
+        var commissions = await _dbContext.Set<CommissionEntry>().ExecuteDeleteAsync(cancellationToken);
+
+        await _dbContext.Set<PaymentGatewayTransaction>().ExecuteDeleteAsync(cancellationToken);
+        var payments = await _dbContext.Set<Transaction>().ExecuteDeleteAsync(cancellationToken);
+
+        await _dbContext.Set<InvoiceItem>().ExecuteDeleteAsync(cancellationToken);
+        var invoices = await _dbContext.Set<Invoice>().ExecuteDeleteAsync(cancellationToken);
+
+        var customerServices = await _dbContext.Set<CustomerService>().ExecuteDeleteAsync(cancellationToken);
+        await _dbContext.Set<OrderStatusHistory>().ExecuteDeleteAsync(cancellationToken);
+        await _dbContext.Set<OrderItem>().ExecuteDeleteAsync(cancellationToken);
+        var orders = await _dbContext.Set<Order>().ExecuteDeleteAsync(cancellationToken);
+
+        await transaction.CommitAsync(cancellationToken);
+        return new TestRequestResetResult(
+            workflowInstances,
+            orders,
+            invoices,
+            payments,
+            commissions,
+            formSubmissions,
+            customerServices);
+    }
 
     private async Task<TestDataResetResult> ResetCoreAsync(CancellationToken cancellationToken)
     {

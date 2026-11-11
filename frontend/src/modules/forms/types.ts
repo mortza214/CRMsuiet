@@ -104,3 +104,12 @@ export interface PagedResult<T> {
   hasPrevious: boolean;
   hasNext: boolean;
 }
+
+export interface FormSubmissionHistory {
+  id: string;
+  action: string;
+  modifiedBy: string;
+  modifiedAt: string;
+  modifiedAtJalali: string;
+  previousDataJson?: string | null;
+}

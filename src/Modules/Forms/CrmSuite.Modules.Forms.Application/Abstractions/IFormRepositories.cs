@@ -37,6 +37,10 @@ public interface IFormSubmissionRepository
     void Add(FormSubmission submission);
 
     void AddHistory(FormSubmissionHistory history);
+
+    Task<IReadOnlyList<FormSubmissionHistory>> GetHistoryAsync(
+        Guid submissionId,
+        CancellationToken cancellationToken);
 }
 
 public interface IFormUnitOfWork

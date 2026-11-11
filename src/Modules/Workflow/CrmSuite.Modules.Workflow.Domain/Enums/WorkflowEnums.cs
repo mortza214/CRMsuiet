@@ -61,6 +61,7 @@ public enum WorkflowActionKey
     PayInvoice = 12,
     VerifyPayment = 13,
     SignContract = 14,
+    ReviewInstallation = 15,
 }
 
 public enum WorkflowTaskStatus

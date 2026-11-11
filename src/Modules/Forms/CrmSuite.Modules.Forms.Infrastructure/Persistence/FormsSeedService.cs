@@ -14,6 +14,7 @@ public sealed class FormsSeedService
 {
     public const string RequestFormCode = "RequestForm";
     public const string FeasibilityReportCode = "FeasibilityReport";
+    public const string PurchaseEquipmentFormCode = "PurchaseEquipmentForm";
     public const string FeasibilityResultCode = "FeasibilityResult";
     public const string InstallationSpecsCode = "InstallationSpecs";
     public const string InstallationReportCode = "InstallationReport";
@@ -42,6 +43,17 @@ public sealed class FormsSeedService
                 "فرم درخواست اولیه سرویس",
                 FormEntityType.Order,
                 RequestFormSchema,
+                now,
+                cancellationToken);
+        }
+
+        if (!existing.Contains(PurchaseEquipmentFormCode.ToUpperInvariant()))
+        {
+            await AddAsync(
+                PurchaseEquipmentFormCode,
+                "فرم خرید تجهیزات",
+                FormEntityType.Order,
+                PurchaseEquipmentSchema,
                 now,
                 cancellationToken);
         }
@@ -136,6 +148,18 @@ public sealed class FormsSeedService
         _dbContext.Set<FormTemplate>().Add(template);
         await Task.CompletedTask;
     }
+
+    private const string PurchaseEquipmentSchema = """
+        {
+          "fields": [
+            { "key": "equipment_name", "label": "نام تجهیز", "type": "text", "required": true, "order": 1 },
+            { "key": "quantity", "label": "تعداد", "type": "number", "required": true, "order": 2 },
+            { "key": "unit_price", "label": "قیمت واحد", "type": "number", "required": true, "order": 3 },
+            { "key": "warehouse", "label": "انبار", "type": "text", "required": false, "order": 4 },
+            { "key": "description", "label": "توضیحات", "type": "textarea", "required": false, "order": 5 }
+          ]
+        }
+        """;
 
     private const string RequestFormSchema = """
         {

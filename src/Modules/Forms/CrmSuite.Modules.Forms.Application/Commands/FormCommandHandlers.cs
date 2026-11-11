@@ -394,6 +394,12 @@ public sealed class SubmitFormCommandHandler
         AddSubmissionItems(submission, template, request.SubmittedDataJson);
 
         _submissions.Add(submission);
+        _submissions.AddHistory(new FormSubmissionHistory(
+            submission.Id,
+            "Created",
+            _currentUser.UserId.Value,
+            _clock.UtcNow,
+            null));
         await _unitOfWork.SaveChangesAsync(cancellationToken);
         _auditScope.EntityId = submission.Id.ToString();
 

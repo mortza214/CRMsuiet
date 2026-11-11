@@ -49,4 +49,12 @@ public sealed class FormSubmissionRepository : IFormSubmissionRepository
 
     public void AddHistory(FormSubmissionHistory history) =>
         _dbContext.Set<FormSubmissionHistory>().Add(history);
+
+    public async Task<IReadOnlyList<FormSubmissionHistory>> GetHistoryAsync(
+        Guid submissionId,
+        CancellationToken cancellationToken) =>
+        await _dbContext.Set<FormSubmissionHistory>()
+            .Where(history => history.FormSubmissionId == submissionId)
+            .OrderBy(history => history.ModifiedAt)
+            .ToListAsync(cancellationToken);
 }

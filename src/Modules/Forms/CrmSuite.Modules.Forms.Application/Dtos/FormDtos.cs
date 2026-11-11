@@ -54,3 +54,12 @@ public sealed record FormSubmissionDto(
     DateTime? ReviewedAt,
     string? ReviewedAtJalali,
     string? ReviewNote);
+
+
+public sealed record FormSubmissionHistoryDto(
+    Guid Id,
+    string Action,
+    Guid ModifiedBy,
+    DateTime ModifiedAt,
+    string ModifiedAtJalali,
+    string? PreviousDataJson);

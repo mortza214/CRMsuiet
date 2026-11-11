@@ -143,6 +143,16 @@ public sealed class VerifyPaymentAction : IWorkflowAction
     }
 }
 
+public sealed class ReviewInstallationAction : IWorkflowAction
+{
+    public WorkflowActionKey Key => WorkflowActionKey.ReviewInstallation;
+
+    public Task<Result> ExecuteAsync(
+        WorkflowActionContext context,
+        CancellationToken cancellationToken) =>
+        Task.FromResult(Result.Success());
+}
+
 public sealed class SignContractAction : IWorkflowAction
 {
     public WorkflowActionKey Key => WorkflowActionKey.SignContract;

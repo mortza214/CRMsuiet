@@ -173,6 +173,18 @@ public sealed class FormsController : ControllerBase
         return this.ToApiResult(result);
     }
 
+    [HttpGet("submissions/{id:guid}/history")]
+    [HasPermission(Permissions.Forms.Submission.Read)]
+    public async Task<IActionResult> GetSubmissionHistory(
+        Guid id,
+        CancellationToken cancellationToken)
+    {
+        var result = await _mediator.Send(
+            new GetFormSubmissionHistoryQuery(id),
+            cancellationToken);
+        return this.ToApiResult(result);
+    }
+
     [HttpPost("submissions/{id:guid}/review")]
     [HasPermission(Permissions.Forms.Submission.Review)]
     public async Task<IActionResult> ReviewSubmission(

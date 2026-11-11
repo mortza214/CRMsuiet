@@ -269,6 +269,7 @@ export function MainLayout() {
           collapsedWidth={72}
           theme="light"
           className="main-sider"
+          style={{ height: "100vh", overflowY: "auto" }}
         >
           <div className="sider-toggle">
             <Button

@@ -17,6 +17,7 @@ import {
 import { useAuthStore } from "@/modules/auth/store";
 import {
   submissionStatusLabels,
+  useFormSubmissionHistory,
   useFormSubmissions,
   useReviewFormSubmission,
 } from "@/modules/forms/hooks/useForms";
@@ -62,6 +63,7 @@ export function FormSubmissions() {
     pageSize: 20,
     status,
   });
+  const history = useFormSubmissionHistory(selected?.id);
   const review = useReviewFormSubmission();
 
   const submitReview = async (values: ReviewForm) => {
@@ -242,6 +244,20 @@ export function FormSubmissions() {
             >
               {prettyJson(selected.submittedDataJson)}
             </pre>
+            <Typography.Title level={5} style={{ margin: 0 }}>
+              تاریخچه ویرایش
+            </Typography.Title>
+            {history.data?.length ? (
+              <Space direction="vertical" size={4}>
+                {history.data.map((entry) => (
+                  <Typography.Text key={entry.id} type="secondary">
+                    {entry.action === "Created" ? "ایجاد" : "ویرایش"} — {entry.modifiedAtJalali}
+                  </Typography.Text>
+                ))}
+              </Space>
+            ) : (
+              <Typography.Text type="secondary">تاریخچه‌ای ثبت نشده است.</Typography.Text>
+            )}
             {canReview && selected.status === "Submitted" && reviewApprove === null && (
               <Space>
                 <Button type="primary" onClick={() => setReviewApprove(true)}>
