@@ -1,4 +1,4 @@
-import { useMemo } from "react";
+import { useMemo, useState } from "react";
 import type { Dayjs } from "dayjs";
 import {
   Checkbox,
@@ -9,6 +9,7 @@ import {
   Space,
   Typography,
 } from "antd";
+import { useFormTemplateByCode } from "@/modules/forms/hooks/useForms";
 
 interface SchemaField {
   key: string;
@@ -20,9 +21,11 @@ interface SchemaField {
 }
 
 interface Props {
+  formCode?: string;
   schemaJson?: string | null;
-  values: Record<string, unknown>;
-  onChange: (values: Record<string, unknown>) => void;
+  values?: Record<string, unknown>;
+  onChange?: (values: Record<string, unknown>) => void;
+  onDataChange?: (values: Record<string, unknown>) => void;
 }
 
 function parseFields(schemaJson?: string | null): SchemaField[] {
@@ -58,20 +61,38 @@ function visible(field: SchemaField, values: Record<string, unknown>) {
   return true;
 }
 
-export function WorkflowFormRenderer({ schemaJson, values, onChange }: Props) {
-  const fields = useMemo(() => parseFields(schemaJson), [schemaJson]);
+export function WorkflowFormRenderer({
+  formCode,
+  schemaJson,
+  values,
+  onChange,
+  onDataChange,
+}: Props) {
+  const template = useFormTemplateByCode(formCode);
+  const [internalValues, setInternalValues] = useState<Record<string, unknown>>({});
+  const actualValues = values ?? internalValues;
+  const actualSchema = schemaJson ?? template.data?.schemaJson;
+  const fields = useMemo(() => parseFields(actualSchema), [actualSchema]);
+
+  if (template.isLoading && !actualSchema) {
+    return <Typography.Text type="secondary">در حال دریافت فرم...</Typography.Text>;
+  }
+
   if (fields.length === 0) {
     return <Typography.Text type="secondary">فرمی برای این مرحله تعریف نشده است.</Typography.Text>;
   }
 
   const update = (key: string, value: unknown) => {
-    onChange({ ...values, [key]: value });
+    const next = { ...actualValues, [key]: value };
+    setInternalValues(next);
+    onChange?.(next);
+    onDataChange?.(next);
   };
 
   return (
     <Space direction="vertical" size={12} style={{ width: "100%" }}>
       {fields
-        .filter((field) => visible(field, values))
+        .filter((field) => visible(field, actualValues))
         .map((field) => (
           <div key={field.key}>
             <Typography.Text>
@@ -82,7 +103,7 @@ export function WorkflowFormRenderer({ schemaJson, values, onChange }: Props) {
               {field.options?.length ? (
                 <Select
                   style={{ width: "100%" }}
-                  value={values[field.key] as string | undefined}
+                  value={actualValues[field.key] as string | undefined}
                   onChange={(value) => update(field.key, value)}
                   options={field.options}
                   placeholder={field.label}
@@ -91,13 +112,13 @@ export function WorkflowFormRenderer({ schemaJson, values, onChange }: Props) {
               ) : field.type === "number" ? (
                 <InputNumber
                   style={{ width: "100%" }}
-                  value={typeof values[field.key] === "number" ? (values[field.key] as number) : undefined}
+                  value={typeof actualValues[field.key] === "number" ? (actualValues[field.key] as number) : undefined}
                   onChange={(value) => update(field.key, value)}
                   placeholder={field.label}
                 />
               ) : field.type === "checkbox" ? (
                 <Checkbox
-                  checked={Boolean(values[field.key])}
+                  checked={Boolean(actualValues[field.key])}
                   onChange={(event) => update(field.key, event.target.checked)}
                 >
                   {field.label}
@@ -112,13 +133,13 @@ export function WorkflowFormRenderer({ schemaJson, values, onChange }: Props) {
               ) : field.type === "textarea" ? (
                 <Input.TextArea
                   rows={3}
-                  value={String(values[field.key] ?? "")}
+                  value={String(actualValues[field.key] ?? "")}
                   onChange={(event) => update(field.key, event.target.value)}
                   placeholder={field.label}
                 />
               ) : (
                 <Input
-                  value={String(values[field.key] ?? "")}
+                  value={String(actualValues[field.key] ?? "")}
                   onChange={(event) => update(field.key, event.target.value)}
                   placeholder={field.label}
                   type={field.type === "file" ? "text" : field.type}
