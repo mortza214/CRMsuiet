@@ -109,7 +109,6 @@ export function PortalRequests() {
     try {
       await portalApi.post("/portal/payments/manual", {
         invoiceId: invoice.id,
-        customerId: invoice.customerId,
         amount: values.amount,
         paymentMethod: "ManualTransfer",
         referenceNumber: values.referenceNumber,

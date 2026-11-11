@@ -12,5 +12,6 @@
     <ProjectReference Include="..\CrmSuite.Modules.Payments.Infrastructure\CrmSuite.Modules.Payments.Infrastructure.csproj" />
     <ProjectReference Include="..\..\Foundation\CrmSuite.Modules.Foundation.Api\CrmSuite.Modules.Foundation.Api.csproj" />
     <ProjectReference Include="..\..\Identity\CrmSuite.Modules.Identity.Api\CrmSuite.Modules.Identity.Api.csproj" />
+    <ProjectReference Include="..\..\Customers\CrmSuite.Modules.Customers.Application\CrmSuite.Modules.Customers.Application.csproj" />
   </ItemGroup>
 </Project>
