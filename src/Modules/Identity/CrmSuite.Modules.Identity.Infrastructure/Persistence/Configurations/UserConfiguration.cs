@@ -43,6 +43,9 @@ public sealed class UserConfiguration : BaseEntityConfiguration<User>
             .HasColumnName("email")
             .HasMaxLength(256);
 
+        builder.Property(user => user.CustomerId)
+            .HasColumnName("customer_id");
+
         builder.Property(user => user.IsActive)
             .HasColumnName("is_active")
             .IsRequired();

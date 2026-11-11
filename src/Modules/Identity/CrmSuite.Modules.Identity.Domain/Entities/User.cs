@@ -36,6 +36,8 @@ public sealed class User : BaseEntity
 
     public string? Email { get; private set; }
 
+    public Guid? CustomerId { get; private set; }
+
     public bool IsActive { get; private set; }
 
     public int FailedLoginCount { get; private set; }
@@ -61,6 +63,12 @@ public sealed class User : BaseEntity
         Mobile = NormalizeMobile(mobile);
         Email = NormalizeEmail(email);
         IsActive = isActive;
+        MarkUpdated(userId, utcNow);
+    }
+
+    public void SetCustomerId(Guid? customerId, Guid? userId, DateTime utcNow)
+    {
+        CustomerId = customerId;
         MarkUpdated(userId, utcNow);
     }
 

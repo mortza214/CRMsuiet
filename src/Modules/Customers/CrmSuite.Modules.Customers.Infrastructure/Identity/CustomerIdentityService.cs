@@ -4,6 +4,7 @@ using CrmSuite.BuildingBlocks.Domain.Results;
 using CrmSuite.Modules.Customers.Application.Abstractions;
 using CrmSuite.Modules.Customers.Application.Dtos;
 using CrmSuite.Modules.Customers.Domain.Entities;
+using CrmSuite.Modules.Customers.Domain.Enums;
 using CrmSuite.Modules.Foundation.Application.Abstractions;
 using CrmSuite.Modules.Identity.Application.Abstractions;
 using CrmSuite.Modules.Identity.Application.Auth;
@@ -91,15 +92,19 @@ public sealed class CustomerIdentityService : ICustomerIdentityService
         }
 
         var now = _clock.UtcNow;
-        var password = Guid.NewGuid().ToString("N") + "Aa1!";
+        var defaultPassword = customer.Type == CustomerType.Natural
+                              && !string.IsNullOrWhiteSpace(customer.NationalId)
+            ? customer.NationalId
+            : "123456";
         var user = new User(
             customer.Mobile,
-            _passwordHasher.Hash(password),
+            _passwordHasher.Hash(defaultPassword),
             customer.DisplayName,
             customer.Mobile,
             customer.Email);
 
         user.MarkCreated(null, now);
+        user.SetCustomerId(customer.Id, null, now);
         user.ReplaceRoles(roleIds, null, now);
         _users.Add(user);
 
