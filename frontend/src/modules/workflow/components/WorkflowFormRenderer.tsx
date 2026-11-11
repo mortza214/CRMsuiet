@@ -150,6 +150,7 @@ export function WorkflowFormRenderer({
                   onChange={(event) => update(field.key, event.target.value)}
                   placeholder={field.label}
                   type={field.type === "file" ? "text" : field.type}
+                  disabled={readOnly}
                 />
               )}
             </div>

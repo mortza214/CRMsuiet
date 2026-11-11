@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import {
   ApartmentOutlined,
   EyeOutlined,
@@ -95,7 +95,8 @@ export function WorkflowInbox() {
       entityType: "Order",
       entityId: selectedTask?.entityId,
     },
-    selectedTaskAction?.actionKey === "ReviewFeasibility",
+    Boolean(selectedTask && selectedTaskAction?.formCode) ||
+      selectedTaskAction?.actionKey === "ReviewFeasibility",
   );
   const previousFormData = useMemo(() => {
     const json = previousForms.data?.items?.[0]?.submittedDataJson;
@@ -106,6 +107,18 @@ export function WorkflowInbox() {
       return {};
     }
   }, [previousForms.data]);
+
+  useEffect(() => {
+    if (
+      selectedTaskAction?.formCode &&
+      selectedTaskAction.actionKey !== "ReviewFeasibility" &&
+      Object.keys(previousFormData).length > 0
+    ) {
+      setActionData(previousFormData);
+      setReviewEditable(true);
+    }
+  }, [previousFormData, selectedTaskAction]);
+
   const execute = useExecuteWorkflowAction(selectedTask?.instanceId);
 
   const openAction = (task: WorkflowTask) => {
@@ -403,6 +416,7 @@ export function WorkflowInbox() {
             selectedTaskAction.actionKey !== "DecideSiteVisit" && (
               <WorkflowFormRenderer
                 formCode={selectedTaskAction.formCode}
+                values={reviewEditable ? actionData : previousFormData}
                 onDataChange={setActionData}
               />
             )}

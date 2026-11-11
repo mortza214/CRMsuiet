@@ -23,7 +23,8 @@ public sealed class FillFormAction : IWorkflowAction
             context.State,
             context.Order,
             context.ActionDataJson,
-            cancellationToken);
+            cancellationToken,
+            updateExisting: true);
         return result.IsFailure ? Result.Failure(result.Errors, result.Message) : Result.Success();
     }
 }

@@ -53,6 +53,7 @@ import type {
   ServicePrice,
 } from "@/modules/catalog/types";
 import { useFormTemplates } from "@/modules/forms/hooks/useForms";
+import { useWorkflowDefinitions } from "@/modules/workflow/hooks/useWorkflow";
 import { formatCurrency } from "@/shared/utils/format";
 
 interface ServiceForm {
@@ -84,6 +85,7 @@ export function ServiceEditor() {
   const forms = useServiceForms(id);
   const prices = usePriceHistory(id);
   const formTemplates = useFormTemplates(true);
+  const workflows = useWorkflowDefinitions({ page: 1, pageSize: 100, status: "Published" });
   const update = useUpdateCatalogService(id);
   const setSchemaMutation = useSetAttributeSchema(id);
   const addPrice = useAddServicePrice(id);
@@ -338,8 +340,16 @@ export function ServiceEditor() {
               </Form.Item>
             </Col>
             <Col xs={24} md={6}>
-              <Form.Item name="workflowDefinitionId" label="WorkflowDefinitionId">
-                <Input dir="ltr" />
+              <Form.Item name="workflowDefinitionId" label="فرایند فروش">
+                <Select
+                  allowClear
+                  loading={workflows.isLoading}
+                  placeholder="انتخاب فرایند (اختیاری)"
+                  options={(workflows.data?.items ?? []).map((workflow) => ({
+                    value: workflow.id,
+                    label: `${workflow.name} (${workflow.code})`,
+                  }))}
+                />
               </Form.Item>
             </Col>
           </Row>
