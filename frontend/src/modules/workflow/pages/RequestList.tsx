@@ -12,7 +12,10 @@ export function RequestList() {
   const [status, setStatus] = useState<string | undefined>();
   const [onlyMine, setOnlyMine] = useState(false);
   const currentUserId = useAuthStore((state) => state.user?.id);
-  const requests = useRecentServiceRequests(undefined, 50);
+  const requests = useRecentServiceRequests(
+    onlyMine ? currentUserId : undefined,
+    50,
+  );
   const rows = useMemo(() => {
     const query = search.trim().toLowerCase();
     return (requests.data ?? []).filter((request) => {

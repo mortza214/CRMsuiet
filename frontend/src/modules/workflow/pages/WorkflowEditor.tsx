@@ -296,6 +296,8 @@ export function WorkflowEditor() {
       formCode: values.formCode?.trim() || null,
       actionKey: values.actionKey,
       color: values.color,
+      x: editingState?.x ?? 0,
+      y: editingState?.y ?? 0,
     };
 
     try {

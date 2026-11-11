@@ -35,6 +35,7 @@ export function NotificationSettingsTab() {
     try {
       await update.mutateAsync([
         { key: "Sms.Enabled", value: String(values.smsEnabled), group: "Notifications" },
+        { key: "Sms.Ippanel.Enabled", value: String(values.smsEnabled), group: "Sms.Ippanel" },
         { key: "Bale.Enabled", value: String(values.baleEnabled), group: "Notifications" },
         { key: "Bale.Token", value: values.baleToken?.trim() ?? "", group: "Notifications", isSecret: true },
       ]);
