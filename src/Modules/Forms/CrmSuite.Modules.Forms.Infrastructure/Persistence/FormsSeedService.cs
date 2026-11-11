@@ -14,6 +14,7 @@ public sealed class FormsSeedService
 {
     public const string RequestFormCode = "RequestForm";
     public const string FeasibilityReportCode = "FeasibilityReport";
+    public const string EquipmentSupplyFormCode = "EQUIPMENT_SUPPLY_FORM";
     public const string PurchaseEquipmentFormCode = "PurchaseEquipmentForm";
     public const string FeasibilityResultCode = "FeasibilityResult";
     public const string InstallationSpecsCode = "InstallationSpecs";
@@ -54,6 +55,17 @@ public sealed class FormsSeedService
                 "فرم خرید تجهیزات",
                 FormEntityType.Order,
                 PurchaseEquipmentSchema,
+                now,
+                cancellationToken);
+        }
+
+        if (!existing.Contains(EquipmentSupplyFormCode.ToUpperInvariant()))
+        {
+            await AddAsync(
+                EquipmentSupplyFormCode,
+                "تامین تجهیزات",
+                FormEntityType.Order,
+                EquipmentSupplySchema,
                 now,
                 cancellationToken);
         }
@@ -148,6 +160,20 @@ public sealed class FormsSeedService
         _dbContext.Set<FormTemplate>().Add(template);
         await Task.CompletedTask;
     }
+
+    private const string EquipmentSupplySchema = """
+        {
+          "fields": [
+            { "key": "equipment_source", "label": "حالت تامین تجهیزات", "type": "select", "required": true, "order": 1,
+              "options": [
+                { "value": "purchase", "label": "خرید تجهیزات" },
+                { "value": "consigned", "label": "تجهیزات امانی" },
+                { "value": "available", "label": "تجهیزات موجود" }
+              ] },
+            { "key": "notes", "label": "توضیحات", "type": "textarea", "required": false, "order": 2 }
+          ]
+        }
+        """;
 
     private const string PurchaseEquipmentSchema = """
         {

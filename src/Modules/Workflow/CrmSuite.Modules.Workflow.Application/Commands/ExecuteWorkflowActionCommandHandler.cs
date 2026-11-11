@@ -82,6 +82,23 @@ public sealed class ExecuteWorkflowActionCommandHandler
             }
         }
 
+        if (selectedTransition is not null
+            && TryReadString(request.ActionDataJson, "equipment_source", out var equipmentSource))
+        {
+            var targetState = definition.FindState(selectedTransition.ToStateId);
+            var normalizedSource = equipmentSource.Trim().ToLowerInvariant();
+            var requiresPurchase = normalizedSource == "purchase";
+            var targetsPurchase = targetState.Code == "PURCHASE_PENDING";
+            if (requiresPurchase != targetsPurchase)
+            {
+                return Result.Failure<WorkflowInstanceDto>(
+                    requiresPurchase
+                        ? "برای خرید تجهیزات، باید گزینه «نیاز به خرید» را انتخاب کنید."
+                        : "برای تجهیزات امانی یا موجود، باید گزینه «تجهیزات موجود/امانی» را انتخاب کنید.",
+                    "WORKFLOW_EQUIPMENT_SOURCE_MISMATCH");
+            }
+        }
+
         var context = new WorkflowActionContext(
             order,
             instance,
@@ -182,6 +199,35 @@ public sealed class ExecuteWorkflowActionCommandHandler
         }
 
         return false;
+    }
+
+    private static bool TryReadString(
+        string? actionDataJson,
+        string propertyName,
+        out string value)
+    {
+        value = string.Empty;
+        if (string.IsNullOrWhiteSpace(actionDataJson))
+        {
+            return false;
+        }
+
+        try
+        {
+            using var document = JsonDocument.Parse(actionDataJson);
+            if (!document.RootElement.TryGetProperty(propertyName, out var property)
+                || property.ValueKind != JsonValueKind.String)
+            {
+                return false;
+            }
+
+            value = property.GetString() ?? string.Empty;
+            return !string.IsNullOrWhiteSpace(value);
+        }
+        catch (JsonException)
+        {
+            return false;
+        }
     }
 
     private Task<Result> ExecuteActionAsync(
