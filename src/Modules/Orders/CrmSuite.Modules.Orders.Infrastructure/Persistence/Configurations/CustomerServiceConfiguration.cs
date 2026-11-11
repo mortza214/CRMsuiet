@@ -30,6 +30,7 @@ public sealed class CustomerServiceConfiguration : BaseEntityConfiguration<Custo
         builder.Property(service => service.ActivatedAt).HasColumnName("activated_at").HasColumnType("datetime(6)").IsRequired();
         builder.Property(service => service.NextInvoiceAt).HasColumnName("next_invoice_at").HasColumnType("datetime(6)");
         builder.Property(service => service.LastInvoicedAt).HasColumnName("last_invoiced_at").HasColumnType("datetime(6)");
+        builder.Property(service => service.IsEquipmentConsigned).HasColumnName("is_equipment_consigned").IsRequired();
 
         builder.HasIndex(service => new { service.CustomerId, service.Status })
             .HasDatabaseName("ix_customer_services_customer_status");

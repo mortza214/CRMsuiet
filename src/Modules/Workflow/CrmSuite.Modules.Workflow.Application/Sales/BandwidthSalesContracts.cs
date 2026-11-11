@@ -6,6 +6,7 @@ namespace CrmSuite.Modules.Workflow.Application.Sales;
 
 public static class BandwidthWorkflowCodes
 {
+    public const string Bandwidth = "WF-BANDWIDTH";
     public const string WithFeasibility = "WF-BANDWIDTH-FEASIBILITY";
     public const string NoFeasibility = "WF-BANDWIDTH-NO-FEASIBILITY";
 }

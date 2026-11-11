@@ -26,9 +26,9 @@ namespace CrmSuite.UnitTests.Workflow;
 public sealed class BandwidthWorkflowSelectionTests
 {
     [Theory]
-    [InlineData("wireless", BandwidthWorkflowCodes.WithFeasibility)]
-    [InlineData("fiber", BandwidthWorkflowCodes.NoFeasibility)]
-    [InlineData("cable", BandwidthWorkflowCodes.NoFeasibility)]
+    [InlineData("wireless", BandwidthWorkflowCodes.Bandwidth)]
+    [InlineData("fiber", BandwidthWorkflowCodes.Bandwidth)]
+    [InlineData("cable", BandwidthWorkflowCodes.Bandwidth)]
     public async Task Substrate_selects_the_expected_workflow(
         string substrate,
         string expectedCode)
@@ -191,7 +191,7 @@ public sealed class BandwidthWorkflowSelectionTests
         private static WorkflowDefinition BuildDefinition()
         {
             var definition = new WorkflowDefinition(
-                BandwidthWorkflowCodes.WithFeasibility,
+                BandwidthWorkflowCodes.Bandwidth,
                 "تست",
                 WorkflowEntityType.Order,
                 null,
@@ -213,7 +213,7 @@ public sealed class BandwidthWorkflowSelectionTests
             new(
                 instance.Id,
                 instance.DefinitionId,
-                BandwidthWorkflowCodes.WithFeasibility,
+                BandwidthWorkflowCodes.Bandwidth,
                 "تست",
                 1,
                 "Order",

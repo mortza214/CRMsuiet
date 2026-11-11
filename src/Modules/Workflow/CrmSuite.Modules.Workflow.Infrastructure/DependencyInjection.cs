@@ -35,6 +35,12 @@ public static class DependencyInjection
         services.AddScoped<IWorkflowAction, IssueFinalInvoiceAction>();
         services.AddScoped<IWorkflowAction, RequestPaymentAction>();
         services.AddScoped<IWorkflowAction, ActivateServiceAction>();
+        services.AddScoped<IWorkflowAction, SelectEquipmentAction>();
+        services.AddScoped<IWorkflowAction, PurchaseEquipmentAction>();
+        services.AddScoped<IWorkflowAction, CustomerAction>();
+        services.AddScoped<IWorkflowAction, PayInvoiceAction>();
+        services.AddScoped<IWorkflowAction, VerifyPaymentAction>();
+        services.AddScoped<IWorkflowAction, SignContractAction>();
         services.AddScoped<IWorkflowEntityDisplayResolver, WorkflowEntityDisplayResolver>();
 
         return services;

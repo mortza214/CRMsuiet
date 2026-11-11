@@ -328,6 +328,18 @@ export function NewServiceRequest() {
                   ]}
                 />
               </Form.Item>
+              <Form.Item label="دوره صدور فاکتور">
+                <Select
+                  value={Number(attributes.billing_period_months ?? 1)}
+                  onChange={(value) => setAttribute("billing_period_months", value)}
+                  options={[
+                    { value: 1, label: "یک ماه" },
+                    { value: 3, label: "سه ماه" },
+                    { value: 6, label: "شش ماه" },
+                    { value: 12, label: "یک سال" },
+                  ]}
+                />
+              </Form.Item>
               <Typography.Title level={5}>مشخصات فنی</Typography.Title>
               <Row gutter={16}>
                 {fields

@@ -55,6 +55,8 @@ public sealed class Order : BaseEntity
 
     public Guid? ActivatedBy { get; private set; }
 
+    public bool IsEquipmentConsigned { get; private set; }
+
     public OrderType OrderType { get; private set; }
 
     public ICollection<OrderItem> Items { get; private set; } = new List<OrderItem>();
@@ -152,6 +154,12 @@ public sealed class Order : BaseEntity
         }
 
         WorkflowInstanceId = instanceId;
+        MarkUpdated(userId, utcNow);
+    }
+
+    public void SetEquipmentConsigned(bool isConsigned, Guid? userId, DateTime utcNow)
+    {
+        IsEquipmentConsigned = isConsigned;
         MarkUpdated(userId, utcNow);
     }
 

@@ -2569,6 +2569,10 @@ namespace CrmSuite.BuildingBlocks.Infrastructure.Persistence.Migrations
                         .HasColumnType("tinyint(1)")
                         .HasColumnName("is_deleted");
 
+                    b.Property<bool>("IsEquipmentConsigned")
+                        .HasColumnType("tinyint(1)")
+                        .HasColumnName("is_equipment_consigned");
+
                     b.Property<DateTime?>("LastInvoicedAt")
                         .HasColumnType("datetime(6)")
                         .HasColumnName("last_invoiced_at");
@@ -2677,6 +2681,10 @@ namespace CrmSuite.BuildingBlocks.Infrastructure.Persistence.Migrations
                     b.Property<bool>("IsDeleted")
                         .HasColumnType("tinyint(1)")
                         .HasColumnName("is_deleted");
+
+                    b.Property<bool>("IsEquipmentConsigned")
+                        .HasColumnType("tinyint(1)")
+                        .HasColumnName("is_equipment_consigned");
 
                     b.Property<string>("Notes")
                         .HasMaxLength(1000)

@@ -320,10 +320,101 @@ export function WorkflowInbox() {
             </>
           )}
 
+          {selectedTaskAction?.actionKey === "ReviewFeasibility" && (
+            <>
+              <Alert
+                type="info"
+                showIcon
+                message="فرم کارشناس فنی را بررسی، ویرایش و تأیید کنید."
+                style={{ marginBottom: 12 }}
+              />
+              <WorkflowFormRenderer
+                formCode={selectedTaskAction?.formCode}
+                onDataChange={setActionData}
+              />
+            </>
+          )}
+
           {selectedTaskAction?.actionKey === "FillForm" && (
             <WorkflowFormRenderer
               formCode={selectedTaskAction?.formCode}
               onDataChange={setActionData}
+            />
+          )}
+
+          {selectedTaskAction?.actionKey === "SelectEquipment" && (
+            <Form.Item label="روش تأمین تجهیزات" required>
+              <Select
+                value={actionData.mode as string | undefined}
+                onChange={(mode) => setActionData((current) => ({ ...current, mode }))}
+                options={[
+                  { value: "Purchase", label: "خرید تجهیزات" },
+                  { value: "Consigned", label: "تجهیزات امانی" },
+                  { value: "Existing", label: "تجهیزات موجود" },
+                ]}
+              />
+            </Form.Item>
+          )}
+
+          {selectedTaskAction?.actionKey === "CustomerAction" && (
+            <Form.Item label="پاسخ مشتری" required>
+              <Select
+                value={actionData.decision as string | undefined}
+                onChange={(decision) => setActionData((current) => ({ ...current, decision }))}
+                options={[
+                  { value: "approve", label: "تأیید و ادامه" },
+                  { value: "cancel", label: "انصراف" },
+                ]}
+              />
+            </Form.Item>
+          )}
+
+          {selectedTaskAction?.actionKey === "PayInvoice" && (
+            <>
+              <Form.Item label="روش پرداخت">
+                <Select
+                  value={(actionData.paymentMode as string | undefined) ?? "Gateway"}
+                  onChange={(paymentMode) =>
+                    setActionData((current) => ({ ...current, paymentMode }))
+                  }
+                  options={[
+                    { value: "Gateway", label: "درگاه پرداخت" },
+                    { value: "ManualDeposit", label: "فیش واریزی" },
+                  ]}
+                />
+              </Form.Item>
+              <Form.Item>
+                <Checkbox
+                  checked={Boolean(actionData.paid)}
+                  onChange={(event) =>
+                    setActionData((current) => ({ ...current, paid: event.target.checked }))
+                  }
+                >
+                  پرداخت انجام شد
+                </Checkbox>
+              </Form.Item>
+            </>
+          )}
+
+          {selectedTaskAction?.actionKey === "VerifyPayment" && (
+            <Form.Item label="تأیید مالی">
+              <Checkbox
+                checked={Boolean(actionData.approved)}
+                onChange={(event) =>
+                  setActionData((current) => ({ ...current, approved: event.target.checked }))
+                }
+              >
+                فیش پرداخت تأیید شد
+              </Checkbox>
+            </Form.Item>
+          )}
+
+          {selectedTaskAction?.actionKey === "SignContract" && (
+            <Alert
+              type="info"
+              showIcon
+              message="قرارداد در کارتابل مشتری قرار گرفته است."
+              description="پس از امضای قرارداد، گردش کار تکمیل و سرویس فعال می‌شود."
             />
           )}
 

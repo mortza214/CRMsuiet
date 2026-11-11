@@ -12,6 +12,7 @@ namespace CrmSuite.Modules.Workflow.Infrastructure.Persistence;
 /// </summary>
 public sealed class WorkflowSeedService
 {
+    public const string BandwidthCode = "WF-BANDWIDTH";
     public const string WithFeasibilityCode = "WF-BANDWIDTH-FEASIBILITY";
     public const string NoFeasibilityCode = "WF-BANDWIDTH-NO-FEASIBILITY";
 
@@ -25,7 +26,8 @@ public sealed class WorkflowSeedService
     public async Task SeedAsync(CancellationToken cancellationToken = default)
     {
         var existingCodes = await _dbContext.Set<WorkflowDefinition>()
-            .Where(definition => definition.Code == WithFeasibilityCode
+            .Where(definition => definition.Code == BandwidthCode
+                                 || definition.Code == WithFeasibilityCode
                                  || definition.Code == NoFeasibilityCode)
             .Select(definition => definition.Code)
             .ToListAsync(cancellationToken);
@@ -34,16 +36,9 @@ public sealed class WorkflowSeedService
         var purchase = await EnsureDepartmentAsync("خرید", cancellationToken);
         var now = DateTime.UtcNow;
 
-        if (!existingCodes.Contains(WithFeasibilityCode))
+        if (!existingCodes.Contains(BandwidthCode))
         {
-            var definition = BuildWithFeasibility(technical.Id, purchase.Id, now);
-            definition.Publish(null, now);
-            _dbContext.Set<WorkflowDefinition>().Add(definition);
-        }
-
-        if (!existingCodes.Contains(NoFeasibilityCode))
-        {
-            var definition = BuildWithoutFeasibility(technical.Id, now);
+            var definition = BuildBandwidth(technical.Id, purchase.Id, now);
             definition.Publish(null, now);
             _dbContext.Set<WorkflowDefinition>().Add(definition);
         }
@@ -67,6 +62,94 @@ public sealed class WorkflowSeedService
         _dbContext.Set<Department>().Add(department);
         await _dbContext.SaveChangesAsync(cancellationToken);
         return department;
+    }
+
+    private static WorkflowDefinition BuildBandwidth(
+        Guid technicalDepartmentId,
+        Guid purchaseDepartmentId,
+        DateTime now)
+    {
+        var definition = new WorkflowDefinition(
+            BandwidthCode,
+            "فروش پهنای باند اختصاصی",
+            WorkflowEntityType.Order,
+            "چرخه کامل درخواست، امکان‌سنجی، تجهیزات، پیش‌فاکتور، پرداخت، نصب، قرارداد و فعال‌سازی.",
+            null,
+            now);
+
+        var initial = definition.AddState(
+            "INITIAL_REQUEST", "درخواست اولیه", WorkflowStateType.Start, 1, false,
+            WorkflowAssigneeType.CustomerOwner, null,
+            "RequestForm", "#1677ff", WorkflowActionKey.FillForm);
+        var feasibilityPending = definition.AddState(
+            "FEASIBILITY_PENDING", "در انتظار امکان‌سنجی", WorkflowStateType.Normal, 2, false,
+            WorkflowAssigneeType.Department, technicalDepartmentId.ToString(),
+            "FeasibilityReport", "#fa8c16", WorkflowActionKey.FillForm);
+        var feasibilityReview = definition.AddState(
+            "FEASIBILITY_REVIEW", "بررسی امکان‌سنجی", WorkflowStateType.Normal, 3, false,
+            WorkflowAssigneeType.Department, technicalDepartmentId.ToString(),
+            "FeasibilityReport", "#722ed1", WorkflowActionKey.ReviewFeasibility);
+        var equipmentSupply = definition.AddState(
+            "EQUIPMENT_SUPPLY", "تأمین تجهیزات", WorkflowStateType.Normal, 4, false,
+            WorkflowAssigneeType.CustomerOwner, null, null, "#13c2c2", WorkflowActionKey.SelectEquipment);
+        var purchasePending = definition.AddState(
+            "PURCHASE_PENDING", "در انتظار خرید تجهیزات", WorkflowStateType.Normal, 5, false,
+            WorkflowAssigneeType.Department, purchaseDepartmentId.ToString(),
+            null, "#eb2f96", WorkflowActionKey.PurchaseEquipment);
+        var proforma = definition.AddState(
+            "PROFORMA", "صدور پیش‌فاکتور", WorkflowStateType.Normal, 6, false,
+            WorkflowAssigneeType.CustomerOwner, null, null, "#2f54eb", WorkflowActionKey.IssueProforma);
+        var customerApproval = definition.AddState(
+            "CUSTOMER_APPROVAL", "تأیید مشتری", WorkflowStateType.Normal, 7, false,
+            WorkflowAssigneeType.CustomerOwner, null, null, "#faad14", WorkflowActionKey.CustomerAction);
+        var cancelled = definition.AddState(
+            "CANCELLED", "منصرف شده", WorkflowStateType.End, 8, true,
+            WorkflowAssigneeType.None, null, null, "#ff4d4f");
+        var installationPending = definition.AddState(
+            "INSTALLATION_PENDING", "در انتظار مشخصات نصب", WorkflowStateType.Normal, 9, false,
+            WorkflowAssigneeType.Department, technicalDepartmentId.ToString(),
+            "InstallationSpecs", "#faad14", WorkflowActionKey.FillForm);
+        var installationInProgress = definition.AddState(
+            "INSTALLATION_IN_PROGRESS", "در حال نصب", WorkflowStateType.Normal, 10, false,
+            WorkflowAssigneeType.Department, technicalDepartmentId.ToString(),
+            "InstallationReport", "#fa8c16", WorkflowActionKey.FillForm);
+        var finalInvoice = definition.AddState(
+            "FINAL_INVOICE", "فاکتور نهایی", WorkflowStateType.Normal, 11, false,
+            WorkflowAssigneeType.CustomerOwner, null, null, "#722ed1", WorkflowActionKey.IssueFinalInvoice);
+        var paymentPending = definition.AddState(
+            "PAYMENT_PENDING", "در انتظار پرداخت", WorkflowStateType.Normal, 12, false,
+            WorkflowAssigneeType.CustomerOwner, null, null, "#f5222d", WorkflowActionKey.PayInvoice);
+        var financeReview = definition.AddState(
+            "FINANCE_REVIEW", "بررسی پرداخت مالی", WorkflowStateType.Normal, 13, false,
+            WorkflowAssigneeType.CustomerOwner, null, null, "#fa8c16", WorkflowActionKey.VerifyPayment);
+        var contract = definition.AddState(
+            "CONTRACT", "قرارداد و امضا", WorkflowStateType.Normal, 14, false,
+            WorkflowAssigneeType.CustomerOwner, null, null, "#2f54eb", WorkflowActionKey.SignContract);
+        var completed = definition.AddState(
+            "COMPLETED", "تکمیل و فعال‌سازی", WorkflowStateType.End, 15, true,
+            WorkflowAssigneeType.None, null, null, "#52c41a", WorkflowActionKey.ActivateService);
+
+        AddTransition(definition, initial, feasibilityPending, "ارسال به امکان‌سنجی", 1);
+        AddTransition(definition, initial, equipmentSupply, "شروع مستقیم تأمین تجهیزات", 2);
+        AddTransition(definition, feasibilityPending, feasibilityReview, "ثبت گزارش امکان‌سنجی", 3);
+        AddTransition(definition, feasibilityReview, equipmentSupply, "تأیید امکان‌سنجی", 4);
+        AddTransition(definition, equipmentSupply, purchasePending, "خرید تجهیزات", 5);
+        AddTransition(definition, equipmentSupply, proforma, "تجهیزات امانی یا موجود", 6);
+        AddTransition(definition, purchasePending, proforma, "پس از خرید تجهیزات", 7);
+        AddTransition(definition, proforma, customerApproval, "ارسال برای تأیید مشتری", 8);
+        AddTransition(definition, customerApproval, installationPending, "تأیید و نیاز به نصب", 9);
+        AddTransition(definition, customerApproval, cancelled, "انصراف مشتری", 10);
+        AddTransition(definition, installationPending, installationInProgress, "شروع نصب", 11);
+        AddTransition(definition, installationInProgress, finalInvoice, "پایان نصب", 12);
+        AddTransition(definition, finalInvoice, paymentPending, "ارسال فاکتور نهایی", 13);
+        AddTransition(definition, paymentPending, financeReview, "پرداخت با فیش واریزی", 14);
+        AddTransition(definition, paymentPending, contract, "پرداخت از درگاه", 15);
+        AddTransition(definition, paymentPending, completed, "پرداخت و تکمیل بدون قرارداد", 16);
+        AddTransition(definition, financeReview, contract, "تأیید فیش پرداخت", 17);
+        AddTransition(definition, financeReview, paymentPending, "رد فیش پرداخت", 18);
+        AddTransition(definition, contract, completed, "امضای قرارداد و تکمیل", 19);
+
+        return definition;
     }
 
     private static WorkflowDefinition BuildWithFeasibility(

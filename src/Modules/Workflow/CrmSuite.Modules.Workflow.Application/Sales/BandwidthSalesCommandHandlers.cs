@@ -281,7 +281,8 @@ public sealed class CreateServiceRequestCommandHandler
         }
 
         var started = await _workflow.GetActiveAsync(order.Id, cancellationToken);
-        if (started is not null)
+        if (started is not null
+            && !string.Equals(definitionCode, BandwidthWorkflowCodes.Bandwidth, StringComparison.OrdinalIgnoreCase))
         {
             var firstTarget = requiresFeasibility ? "FEASIBILITY_TRIAGE" : "EQUIPMENT_SUPPLY";
             var firstMove = await _workflow.MoveAsync(
@@ -326,9 +327,7 @@ public sealed class CreateServiceRequestCommandHandler
             }
         }
 
-        return requiresFeasibility
-            ? BandwidthWorkflowCodes.WithFeasibility
-            : BandwidthWorkflowCodes.NoFeasibility;
+        return BandwidthWorkflowCodes.Bandwidth;
     }
 
     private static string ReadString(string json, params string[] keys)
@@ -345,6 +344,30 @@ public sealed class CreateServiceRequestCommandHandler
         }
 
         return string.Empty;
+    }
+
+    private static int ReadBillingPeriodMonths(string? attributesJson)
+    {
+        if (string.IsNullOrWhiteSpace(attributesJson))
+        {
+            return 1;
+        }
+
+        try
+        {
+            using var document = JsonDocument.Parse(attributesJson);
+            if (document.RootElement.TryGetProperty("billing_period_months", out var value)
+                && value.TryGetInt32(out var months))
+            {
+                return months is 1 or 3 or 6 or 12 ? months : 1;
+            }
+        }
+        catch (JsonException)
+        {
+            return 1;
+        }
+
+        return 1;
     }
 
     private static decimal? ReadDecimal(string json, params string[] keys)
@@ -798,6 +821,7 @@ public sealed class ActivateServiceCommandHandler
         }
 
         var now = _clock.UtcNow;
+        var billingMonths = BandwidthAttributeReader.ReadBillingPeriodMonths(item.AttributesJson);
         order.Activate(_currentUser.UserId, now);
         var service = await _services.GetByIdAsync(item.ServiceId!.Value, cancellationToken);
         var customerService = new CustomerService(
@@ -812,8 +836,9 @@ public sealed class ActivateServiceCommandHandler
             item.AttributesJson,
             service?.CommissionPercent,
             now,
-            now.AddMonths(1),
-            _currentUser.UserId);
+            now.AddMonths(billingMonths),
+            _currentUser.UserId,
+            order.IsEquipmentConsigned);
         _customerServices.Add(customerService);
         await _unitOfWork.SaveChangesAsync(cancellationToken);
 
@@ -1020,5 +1045,32 @@ public sealed class SetPaymentModeCommandHandler
 
         order.ChangeStatus(status, _currentUser.UserId, _clock.UtcNow, "همگام‌سازی با گردش کار");
         await _unitOfWork.SaveChangesAsync(cancellationToken);
+    }
+}
+
+internal static class BandwidthAttributeReader
+{
+    public static int ReadBillingPeriodMonths(string? attributesJson)
+    {
+        if (string.IsNullOrWhiteSpace(attributesJson))
+        {
+            return 1;
+        }
+
+        try
+        {
+            using var document = JsonDocument.Parse(attributesJson);
+            if (document.RootElement.TryGetProperty("billing_period_months", out var value)
+                && value.TryGetInt32(out var months))
+            {
+                return months is 1 or 3 or 6 or 12 ? months : 1;
+            }
+        }
+        catch (JsonException)
+        {
+            return 1;
+        }
+
+        return 1;
     }
 }

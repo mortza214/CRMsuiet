@@ -12,6 +12,8 @@ namespace CrmSuite.Modules.Forms.Infrastructure.Persistence;
 /// </summary>
 public sealed class FormsSeedService
 {
+    public const string RequestFormCode = "RequestForm";
+    public const string FeasibilityReportCode = "FeasibilityReport";
     public const string FeasibilityResultCode = "FeasibilityResult";
     public const string InstallationSpecsCode = "InstallationSpecs";
     public const string InstallationReportCode = "InstallationReport";
@@ -33,6 +35,28 @@ public sealed class FormsSeedService
             .ToHashSet(StringComparer.Ordinal);
 
         var now = DateTime.UtcNow;
+        if (!existing.Contains(RequestFormCode.ToUpperInvariant()))
+        {
+            await AddAsync(
+                RequestFormCode,
+                "فرم درخواست اولیه سرویس",
+                FormEntityType.Order,
+                RequestFormSchema,
+                now,
+                cancellationToken);
+        }
+
+        if (!existing.Contains(FeasibilityReportCode.ToUpperInvariant()))
+        {
+            await AddAsync(
+                FeasibilityReportCode,
+                "گزارش امکان‌سنجی",
+                FormEntityType.Order,
+                FeasibilityReportSchema,
+                now,
+                cancellationToken);
+        }
+
         if (!existing.Contains(FeasibilityResultCode.ToUpperInvariant()))
         {
             await AddAsync(
@@ -112,6 +136,39 @@ public sealed class FormsSeedService
         _dbContext.Set<FormTemplate>().Add(template);
         await Task.CompletedTask;
     }
+
+    private const string RequestFormSchema = """
+        {
+          "fields": [
+            { "key": "cooperation_type", "label": "نوع همکاری", "type": "select", "required": true, "order": 1,
+              "options": [{ "value": "contract", "label": "قرارداد" }, { "value": "invoice", "label": "فاکتوری" }] },
+            { "key": "contract_end_date", "label": "تاریخ پایان قرارداد", "type": "text", "required": false, "order": 2,
+              "visibleIf": { "field": "cooperation_type", "equals": "contract" } },
+            { "key": "bandwidth_mb", "label": "پهنای باند (مگابیت)", "type": "number", "required": true, "order": 3 },
+            { "key": "substrate", "label": "نوع بستر", "type": "select", "required": true, "order": 4,
+              "options": [{ "value": "wireless", "label": "وایرلس" }, { "value": "fiber", "label": "فیبر" }, { "value": "cable", "label": "کابل" }] },
+            { "key": "geo_coordinates", "label": "مختصات جغرافیایی", "type": "text", "required": true, "order": 5 },
+            { "key": "billing_period_months", "label": "دوره صدور فاکتور (ماه)", "type": "select", "required": true, "order": 6,
+              "options": [{ "value": "1", "label": "یک ماه" }, { "value": "3", "label": "سه ماه" }, { "value": "6", "label": "شش ماه" }, { "value": "12", "label": "یک سال" }] },
+            { "key": "description", "label": "توضیحات", "type": "textarea", "required": false, "order": 7 }
+          ]
+        }
+        """;
+
+    private const string FeasibilityReportSchema = """
+        {
+          "fields": [
+            { "key": "needs_visit", "label": "نیاز به مراجعه حضوری", "type": "select", "required": true, "order": 1,
+              "options": [{ "value": "yes", "label": "بله" }, { "value": "no", "label": "خیر" }] },
+            { "key": "available_facilities", "label": "امکانات موجود", "type": "textarea", "required": false, "order": 2 },
+            { "key": "needs_tower", "label": "نیاز به دکل", "type": "select", "required": true, "order": 3,
+              "options": [{ "value": "yes", "label": "بله" }, { "value": "no", "label": "خیر" }] },
+            { "key": "is_feasible", "label": "امکان ارائه", "type": "select", "required": true, "order": 4,
+              "options": [{ "value": "yes", "label": "دارد" }, { "value": "no", "label": "ندارد" }] },
+            { "key": "description", "label": "توضیحات", "type": "textarea", "required": false, "order": 5 }
+          ]
+        }
+        """;
 
     private const string FeasibilityVisitDecisionSchema = """
         {

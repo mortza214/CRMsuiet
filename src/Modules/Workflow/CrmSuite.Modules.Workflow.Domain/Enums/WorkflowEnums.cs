@@ -55,6 +55,12 @@ public enum WorkflowActionKey
     ActivateService = 6,
     ReviewFeasibility = 7,
     DecideSiteVisit = 8,
+    SelectEquipment = 9,
+    PurchaseEquipment = 10,
+    CustomerAction = 11,
+    PayInvoice = 12,
+    VerifyPayment = 13,
+    SignContract = 14,
 }
 
 public enum WorkflowTaskStatus

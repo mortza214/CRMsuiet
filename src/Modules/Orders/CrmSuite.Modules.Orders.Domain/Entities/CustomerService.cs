@@ -24,7 +24,8 @@ public sealed class CustomerService : BaseEntity
         decimal? commissionPercent,
         DateTime activatedAtUtc,
         DateTime nextInvoiceAtUtc,
-        Guid? createdByUserId)
+        Guid? createdByUserId,
+        bool isEquipmentConsigned = false)
         : base(Guid.NewGuid())
     {
         if (customerId == Guid.Empty || serviceId == Guid.Empty || orderId == Guid.Empty)
@@ -51,6 +52,7 @@ public sealed class CustomerService : BaseEntity
         Status = CustomerServiceStatus.Active;
         ActivatedAt = DateTime.SpecifyKind(activatedAtUtc, DateTimeKind.Utc);
         NextInvoiceAt = DateTime.SpecifyKind(nextInvoiceAtUtc, DateTimeKind.Utc);
+        IsEquipmentConsigned = isEquipmentConsigned;
         MarkCreated(createdByUserId, activatedAtUtc);
     }
 
@@ -85,6 +87,8 @@ public sealed class CustomerService : BaseEntity
     public DateTime? NextInvoiceAt { get; private set; }
 
     public DateTime? LastInvoicedAt { get; private set; }
+
+    public bool IsEquipmentConsigned { get; private set; }
 
     public bool IsActive => Status == CustomerServiceStatus.Active;
 

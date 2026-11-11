@@ -83,6 +83,10 @@ public sealed class OrderConfiguration : BaseEntityConfiguration<Order>
         builder.Property(order => order.ActivatedBy)
             .HasColumnName("activated_by");
 
+        builder.Property(order => order.IsEquipmentConsigned)
+            .HasColumnName("is_equipment_consigned")
+            .IsRequired();
+
         builder.HasIndex(order => order.WorkflowInstanceId)
             .HasDatabaseName("ix_orders_workflow_instance_id");
 
