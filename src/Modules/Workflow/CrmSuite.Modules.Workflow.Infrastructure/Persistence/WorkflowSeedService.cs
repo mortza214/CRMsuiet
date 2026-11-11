@@ -34,16 +34,37 @@ public sealed class WorkflowSeedService
 
         var technical = await EnsureDepartmentAsync("فنی", cancellationToken);
         var purchase = await EnsureDepartmentAsync("خرید", cancellationToken);
+        var technicalManager = await EnsureRoleAsync("TechnicalManager", "مدیر فنی", cancellationToken);
+        var technicalExpert = await EnsureRoleAsync("TechnicalExpert", "کارشناس فنی", cancellationToken);
         var now = DateTime.UtcNow;
 
         if (!existingCodes.Contains(BandwidthCode))
         {
-            var definition = BuildBandwidth(technical.Id, purchase.Id, now);
+            var definition = BuildBandwidth(technical.Id, purchase.Id, technicalManager.Id, technicalExpert.Id, now);
             definition.Publish(null, now);
             _dbContext.Set<WorkflowDefinition>().Add(definition);
         }
 
         await _dbContext.SaveChangesAsync(cancellationToken);
+    }
+
+    private async Task<Role> EnsureRoleAsync(
+        string name,
+        string displayName,
+        CancellationToken cancellationToken)
+    {
+        var role = await _dbContext.Set<Role>()
+            .FirstOrDefaultAsync(item => item.Name == name, cancellationToken);
+        if (role is not null)
+        {
+            return role;
+        }
+
+        role = new Role(name, displayName);
+        role.MarkCreated(null, DateTime.UtcNow);
+        _dbContext.Set<Role>().Add(role);
+        await _dbContext.SaveChangesAsync(cancellationToken);
+        return role;
     }
 
     private async Task<Department> EnsureDepartmentAsync(
@@ -67,6 +88,8 @@ public sealed class WorkflowSeedService
     private static WorkflowDefinition BuildBandwidth(
         Guid technicalDepartmentId,
         Guid purchaseDepartmentId,
+        Guid technicalManagerRoleId,
+        Guid technicalExpertRoleId,
         DateTime now)
     {
         var definition = new WorkflowDefinition(
@@ -79,9 +102,9 @@ public sealed class WorkflowSeedService
 
         var initial = definition.AddState("INITIAL_REQUEST", "ثبت درخواست", WorkflowStateType.Start, 1, false, WorkflowAssigneeType.CustomerOwner, null, "RequestForm", "#1677ff", WorkflowActionKey.FillForm);
         var salesReview = definition.AddState("SALES_REVIEW", "بررسی فروش", WorkflowStateType.Normal, 2, false, WorkflowAssigneeType.CustomerOwner, null, null, "#1677ff", WorkflowActionKey.None);
-        var feasibilityPending = definition.AddState("FEASIBILITY_PENDING", "امکان‌سنجی", WorkflowStateType.Normal, 3, false, WorkflowAssigneeType.Department, technicalDepartmentId.ToString(), "FeasibilityVisitDecision", "#fa8c16", WorkflowActionKey.FillForm);
-        var siteVisitPending = definition.AddState("SITE_VISIT_PENDING", "مراجعه حضوری", WorkflowStateType.Normal, 4, false, WorkflowAssigneeType.Department, technicalDepartmentId.ToString(), "FeasibilityResult", "#fa8c16", WorkflowActionKey.FillForm);
-        var feasibilityReview = definition.AddState("FEASIBILITY_REVIEW", "تایید فنی", WorkflowStateType.Normal, 5, false, WorkflowAssigneeType.Department, technicalDepartmentId.ToString(), "FeasibilityResult", "#722ed1", WorkflowActionKey.ReviewFeasibility);
+        var feasibilityPending = definition.AddState("FEASIBILITY_PENDING", "امکان‌سنجی", WorkflowStateType.Normal, 3, false, WorkflowAssigneeType.Role, technicalManagerRoleId.ToString(), "FeasibilityVisitDecision", "#fa8c16", WorkflowActionKey.FillForm);
+        var siteVisitPending = definition.AddState("SITE_VISIT_PENDING", "مراجعه حضوری", WorkflowStateType.Normal, 4, false, WorkflowAssigneeType.Role, technicalExpertRoleId.ToString(), "FeasibilityResult", "#fa8c16", WorkflowActionKey.FillForm);
+        var feasibilityReview = definition.AddState("FEASIBILITY_REVIEW", "تایید فنی", WorkflowStateType.Normal, 5, false, WorkflowAssigneeType.Role, technicalManagerRoleId.ToString(), "FeasibilityResult", "#722ed1", WorkflowActionKey.ReviewFeasibility);
         var equipmentSupply = definition.AddState("EQUIPMENT_SUPPLY", "تامین تجهیزات", WorkflowStateType.Normal, 6, false, WorkflowAssigneeType.CustomerOwner, null, null, "#13c2c2", WorkflowActionKey.SelectEquipment);
         var purchasePending = definition.AddState("PURCHASE_PENDING", "خرید تجهیزات", WorkflowStateType.Normal, 7, false, WorkflowAssigneeType.Department, purchaseDepartmentId.ToString(), "PurchaseEquipmentForm", "#eb2f96", WorkflowActionKey.FillForm);
         var proforma = definition.AddState("PROFORMA", "صدور پیش‌فاکتور", WorkflowStateType.Normal, 8, false, WorkflowAssigneeType.CustomerOwner, null, null, "#2f54eb", WorkflowActionKey.IssueProforma);

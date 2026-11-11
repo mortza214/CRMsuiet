@@ -59,6 +59,29 @@ public sealed class ExecuteWorkflowActionCommandHandler
                 "WORKFLOW_TRANSITION_NOT_FOUND");
         }
 
+        var selectedTransition = transitionId.HasValue
+            ? definition.Transitions.FirstOrDefault(item => item.Id == transitionId.Value)
+            : null;
+        if (selectedTransition is not null
+            && TryReadNeedsVisit(request.ActionDataJson, out var needsVisit))
+        {
+            var targetState = definition.FindState(selectedTransition.ToStateId);
+            var targetsSiteVisit = targetState.Code == "SITE_VISIT_PENDING";
+            if (needsVisit && !targetsSiteVisit)
+            {
+                return Result.Failure<WorkflowInstanceDto>(
+                    "برای نیاز به مراجعه، باید گزینه ارجاع به کارشناس را انتخاب کنید.",
+                    "WORKFLOW_FEASIBILITY_VISIT_REQUIRED");
+            }
+
+            if (!needsVisit && targetsSiteVisit)
+            {
+                return Result.Failure<WorkflowInstanceDto>(
+                    "برای عدم نیاز به مراجعه، باید گزینه ادامه بدون مراجعه را انتخاب کنید.",
+                    "WORKFLOW_FEASIBILITY_VISIT_NOT_REQUIRED");
+            }
+        }
+
         var context = new WorkflowActionContext(
             order,
             instance,
@@ -116,6 +139,49 @@ public sealed class ExecuteWorkflowActionCommandHandler
         }
 
         return transition;
+    }
+
+    private static bool TryReadNeedsVisit(string? actionDataJson, out bool needsVisit)
+    {
+        needsVisit = false;
+        if (string.IsNullOrWhiteSpace(actionDataJson))
+        {
+            return false;
+        }
+
+        try
+        {
+            using var document = JsonDocument.Parse(actionDataJson);
+            if (!document.RootElement.TryGetProperty("needs_visit", out var value))
+            {
+                return false;
+            }
+
+            if (value.ValueKind is JsonValueKind.True or JsonValueKind.False)
+            {
+                needsVisit = value.GetBoolean();
+                return true;
+            }
+
+            var text = value.GetString()?.Trim().ToLowerInvariant();
+            if (text is "true" or "yes" or "1")
+            {
+                needsVisit = true;
+                return true;
+            }
+
+            if (text is "false" or "no" or "0")
+            {
+                needsVisit = false;
+                return true;
+            }
+        }
+        catch (JsonException)
+        {
+            return false;
+        }
+
+        return false;
     }
 
     private Task<Result> ExecuteActionAsync(
