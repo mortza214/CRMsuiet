@@ -51,6 +51,8 @@ public sealed class WorkflowStateConfiguration : BaseEntityConfiguration<Workflo
             .HasConversion<string>()
             .HasMaxLength(30)
             .IsRequired();
+        builder.Property(state => state.X).HasColumnName("x").HasColumnType("double").IsRequired();
+        builder.Property(state => state.Y).HasColumnName("y").HasColumnType("double").IsRequired();
         builder.Property(state => state.Color).HasColumnName("color").HasMaxLength(30).IsRequired();
         builder.HasIndex(state => new { state.DefinitionId, state.Code }).IsUnique().HasDatabaseName("ux_workflow_states_definition_code");
         builder.HasIndex(state => new { state.DefinitionId, state.Order }).HasDatabaseName("ix_workflow_states_definition_order");

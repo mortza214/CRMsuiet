@@ -28,7 +28,9 @@ public sealed record WorkflowStateDto(
     string? AssigneeValue,
     string? FormCode,
     string Color,
-    string ActionKey = "None");
+    string ActionKey = "None",
+    double X = 0,
+    double Y = 0);
 
 public sealed record WorkflowTransitionDto(
     Guid Id,

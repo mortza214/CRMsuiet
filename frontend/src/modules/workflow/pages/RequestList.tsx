@@ -1,14 +1,17 @@
 import { useMemo, useState } from "react";
 import { EyeOutlined, ReloadOutlined } from "@ant-design/icons";
-import { Button, Card, Input, Select, Space, Table, Tag, Typography, type TableColumnsType } from "antd";
+import { Button, Card, Checkbox, Input, Select, Space, Table, Tag, Typography, type TableColumnsType } from "antd";
 import { useNavigate } from "react-router-dom";
 import { useRecentServiceRequests } from "@/modules/orders/hooks/useOrders";
+import { useAuthStore } from "@/modules/auth/store";
 import type { ServiceRequestSummary } from "@/modules/orders/types";
 
 export function RequestList() {
   const navigate = useNavigate();
   const [search, setSearch] = useState("");
   const [status, setStatus] = useState<string | undefined>();
+  const [onlyMine, setOnlyMine] = useState(false);
+  const currentUserId = useAuthStore((state) => state.user?.id);
   const requests = useRecentServiceRequests(undefined, 50);
   const rows = useMemo(() => {
     const query = search.trim().toLowerCase();
@@ -23,9 +26,10 @@ export function RequestList() {
         (status === "open"
           ? request.workflowStatus === "Running"
           : request.workflowStatus === "Completed");
-      return matchesSearch && matchesStatus;
+      const matchesOwner = !onlyMine || request.salesExpertId === currentUserId;
+      return matchesSearch && matchesStatus && matchesOwner;
     });
-  }, [requests.data, search, status]);
+  }, [currentUserId, onlyMine, requests.data, search, status]);
 
   const columns: TableColumnsType<ServiceRequestSummary> = [
     {
@@ -96,6 +100,9 @@ export function RequestList() {
             placeholder="جستجوی مشتری، شماره درخواست یا سرویس"
             style={{ width: 300 }}
           />
+          <Checkbox checked={onlyMine} onChange={(event) => setOnlyMine(event.target.checked)}>
+            فقط درخواست‌های من
+          </Checkbox>
           <Select
             allowClear
             value={status}

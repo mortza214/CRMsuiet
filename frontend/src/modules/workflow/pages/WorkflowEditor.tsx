@@ -28,6 +28,17 @@ import {
   type TableColumnsType,
 } from "antd";
 import { useNavigate, useParams } from "react-router-dom";
+import {
+  Background,
+  Controls,
+  MiniMap,
+  ReactFlow,
+  type Edge,
+  type Node,
+  type NodeMouseHandler,
+  type OnNodeDrag,
+} from "@xyflow/react";
+import "@xyflow/react/dist/style.css";
 import { useAuthStore } from "@/modules/auth/store";
 import { useCustomerOwners } from "@/modules/customers/hooks/useCustomers";
 import { useFormTemplates } from "@/modules/forms/hooks/useForms";
@@ -148,6 +159,65 @@ export function WorkflowEditor() {
   const hasEnd = states.some((state) => state.stateType === "End");
   const stateName = (stateId: string) =>
     states.find((state) => state.id === stateId)?.name ?? stateId;
+
+  const flowNodes: Node[] = useMemo(
+    () =>
+      states.map((state, index) => ({
+        id: state.id,
+        position: {
+          x: state.x && state.x !== 0 ? state.x : (index % 4) * 230,
+          y: state.y && state.y !== 0 ? state.y : Math.floor(index / 4) * 150,
+        },
+        data: {
+          label: `${state.name}${state.formCode ? `\n${state.formCode}` : ""}`,
+        },
+        style: {
+          border: `2px solid ${state.color || "#1677ff"}`,
+          background:
+            state.stateType === "Start"
+              ? "#f6ffed"
+              : state.stateType === "End"
+                ? "#fff1f0"
+                : "#e6f4ff",
+          borderRadius: 10,
+          padding: 10,
+          width: 180,
+          whiteSpace: "pre-line" as const,
+          textAlign: "center" as const,
+        },
+      })),
+    [states],
+  );
+
+  const flowEdges: Edge[] = useMemo(
+    () =>
+      transitions.map((transition) => ({
+        id: transition.id,
+        source: transition.fromStateId,
+        target: transition.toStateId,
+        label: transition.name,
+        animated: true,
+        style: { stroke: "#597ef7" },
+        labelStyle: { fontSize: 11 },
+      })),
+    [transitions],
+  );
+
+  const handleNodeClick: NodeMouseHandler = (_event, node) => {
+    const state = states.find((item) => item.id === node.id);
+    if (state) openEditState(state);
+  };
+
+  const handleNodeDragStop: OnNodeDrag = (_event, node) => {
+    const state = states.find((item) => item.id === node.id);
+    if (!state || !canManage) return;
+    updateState.mutate({
+      ...state,
+      stateId: state.id,
+      x: node.position.x,
+      y: node.position.y,
+    });
+  };
 
   const assigneeOptions = useMemo(() => {
     if (assigneeType === "User") {
@@ -595,6 +665,32 @@ export function WorkflowEditor() {
           className="module-table"
           locale={{ emptyText: "گذاری تعریف نشده است." }}
         />
+      </Card>
+
+      <Card
+        title="بوم گرافیکی گردش کار"
+        variant="borderless"
+        className="settings-section-card"
+      >
+        <div style={{ height: 540, direction: "ltr" }}>
+          <ReactFlow
+            nodes={flowNodes}
+            edges={flowEdges}
+            fitView
+            onNodeClick={handleNodeClick}
+            onNodeDragStop={handleNodeDragStop}
+            nodesDraggable={isDraft && canManage}
+            nodesConnectable={false}
+            elementsSelectable
+          >
+            <Background />
+            <Controls />
+            <MiniMap />
+          </ReactFlow>
+        </div>
+        <Typography.Text type="secondary">
+          برای ویرایش هر مرحله روی گره کلیک کنید. جابه‌جایی گره‌ها در نسخه پیش‌نویس ذخیره می‌شود.
+        </Typography.Text>
       </Card>
 
       <Card

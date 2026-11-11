@@ -40,6 +40,10 @@ public sealed class WorkflowStateRequest
 
     public WorkflowActionKey ActionKey { get; init; } = WorkflowActionKey.None;
 
+    public double X { get; init; }
+
+    public double Y { get; init; }
+
     public string Color { get; init; } = "#1677ff";
 }
 

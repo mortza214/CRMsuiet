@@ -173,10 +173,14 @@ export function useUpdateWorkflowState(
 ) {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: async (payload: Omit<WorkflowState, "id">) => {
+    mutationFn: async (
+      payload: Omit<WorkflowState, "id"> & { stateId?: string },
+    ) => {
+      const targetStateId = stateId ?? payload.stateId;
+      const { stateId: _stateId, ...body } = payload;
       const response = await api.put<ApiEnvelope<WorkflowState>>(
-        `/workflow/definitions/${id}/states/${stateId}`,
-        payload,
+        `/workflow/definitions/${id}/states/${targetStateId}`,
+        body,
       );
       return response.data.data as WorkflowState;
     },

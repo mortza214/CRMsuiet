@@ -161,6 +161,7 @@ export interface ServiceRequestSummary {
   workflowStateCode?: string | null;
   workflowStateName?: string | null;
   workflowStatus?: string | null;
+  salesExpertId?: string | null;
 }
 
 export interface ServiceRequestDetail extends ServiceRequestSummary {

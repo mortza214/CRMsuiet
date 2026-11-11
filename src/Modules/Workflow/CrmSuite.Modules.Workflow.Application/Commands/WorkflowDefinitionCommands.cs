@@ -33,7 +33,9 @@ public sealed record AddWorkflowStateCommand(
     string? AssigneeValue,
     string? FormCode,
     string Color,
-    WorkflowActionKey ActionKey = WorkflowActionKey.None) : IRequest<Result<WorkflowStateDto>>;
+    WorkflowActionKey ActionKey = WorkflowActionKey.None,
+    double X = 0,
+    double Y = 0) : IRequest<Result<WorkflowStateDto>>;
 
 public sealed record UpdateWorkflowStateCommand(
     Guid DefinitionId,
@@ -47,7 +49,9 @@ public sealed record UpdateWorkflowStateCommand(
     string? AssigneeValue,
     string? FormCode,
     string Color,
-    WorkflowActionKey ActionKey = WorkflowActionKey.None) : IRequest<Result<WorkflowStateDto>>;
+    WorkflowActionKey ActionKey = WorkflowActionKey.None,
+    double X = 0,
+    double Y = 0) : IRequest<Result<WorkflowStateDto>>;
 
 public sealed record RemoveWorkflowStateCommand(
     Guid DefinitionId,

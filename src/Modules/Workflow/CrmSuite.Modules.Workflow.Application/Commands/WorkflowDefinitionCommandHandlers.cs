@@ -285,7 +285,9 @@ public sealed class AddWorkflowStateCommandHandler
                 request.AssigneeValue,
                 request.FormCode,
                 request.Color,
-                request.ActionKey);
+                request.ActionKey,
+                request.X,
+                request.Y);
             await _unitOfWork.SaveChangesAsync(cancellationToken);
             _auditScope.EntityId = definition.Id.ToString();
             return Result.Success(_mapper.ToState(state));
@@ -350,7 +352,9 @@ public sealed class UpdateWorkflowStateCommandHandler
                 request.Color,
                 _currentUser.UserId,
                 _clock.UtcNow,
-                request.ActionKey);
+                request.ActionKey,
+                request.X,
+                request.Y);
             await _unitOfWork.SaveChangesAsync(cancellationToken);
             _auditScope.EntityId = definition.Id.ToString();
             return Result.Success(_mapper.ToState(definition.FindState(request.StateId)));

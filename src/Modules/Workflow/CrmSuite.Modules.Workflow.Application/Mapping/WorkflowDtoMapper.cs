@@ -80,7 +80,9 @@ public sealed class WorkflowDtoMapper
             state.AssigneeValue,
             state.FormCode,
             state.Color,
-            state.ActionKey.ToString());
+            state.ActionKey.ToString(),
+            state.X,
+            state.Y);
 
     public WorkflowTransitionDto ToTransition(WorkflowTransition transition) =>
         new(

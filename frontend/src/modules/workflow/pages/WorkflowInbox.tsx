@@ -68,6 +68,7 @@ export function WorkflowInbox() {
   } | null>(null);
   const [actionOpen, setActionOpen] = useState(false);
   const [actionData, setActionData] = useState<Record<string, unknown>>({});
+  const [reviewEditable, setReviewEditable] = useState(false);
   const [actionForm] = Form.useForm<ActionForm>();
   const tasks = useMyWorkflowTasks(status, departmentId);
   const departments = useDepartments(canReadDepartments);
@@ -114,6 +115,7 @@ export function WorkflowInbox() {
       formCode: task.formCode || undefined,
     });
     setActionData({});
+    setReviewEditable(false);
     actionForm.resetFields();
     setActionOpen(true);
   };
@@ -343,9 +345,21 @@ export function WorkflowInbox() {
             <>
               <WorkflowFormRenderer
                 formCode={selectedTaskAction?.formCode}
-                values={previousFormData}
-                readOnly
+                values={reviewEditable ? actionData : previousFormData}
+                readOnly={!reviewEditable}
+                onDataChange={setActionData}
               />
+              {!reviewEditable && (
+                <Button
+                  style={{ marginTop: 12 }}
+                  onClick={() => {
+                    setActionData(previousFormData);
+                    setReviewEditable(true);
+                  }}
+                >
+                  ویرایش فرم قبلی
+                </Button>
+              )}
               {actionData.needs_visit === "yes" && (
                 <Form.Item label="کارشناس فنی" required>
                   <Select

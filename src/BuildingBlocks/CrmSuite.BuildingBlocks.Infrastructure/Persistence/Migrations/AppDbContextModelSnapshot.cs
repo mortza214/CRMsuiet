@@ -4438,6 +4438,14 @@ namespace CrmSuite.BuildingBlocks.Infrastructure.Persistence.Migrations
                         .HasColumnType("char(36)")
                         .HasColumnName("updated_by_user_id");
 
+                    b.Property<double>("X")
+                        .HasColumnType("double")
+                        .HasColumnName("x");
+
+                    b.Property<double>("Y")
+                        .HasColumnType("double")
+                        .HasColumnName("y");
+
                     b.HasKey("Id");
 
                     b.HasIndex("IsDeleted");

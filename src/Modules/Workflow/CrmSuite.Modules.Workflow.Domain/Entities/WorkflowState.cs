@@ -21,7 +21,9 @@ public sealed class WorkflowState : BaseEntity
         string? assigneeValue,
         string? formCode,
         string color,
-        WorkflowActionKey actionKey = WorkflowActionKey.None)
+        WorkflowActionKey actionKey = WorkflowActionKey.None,
+        double x = 0,
+        double y = 0)
         : base(Guid.NewGuid())
     {
         DefinitionId = definitionId;
@@ -35,7 +37,9 @@ public sealed class WorkflowState : BaseEntity
             assigneeValue,
             formCode,
             color,
-            actionKey);
+            actionKey,
+            x,
+            y);
     }
 
     public Guid DefinitionId { get; private set; }
@@ -60,6 +64,10 @@ public sealed class WorkflowState : BaseEntity
 
     public string Color { get; private set; } = "#1677ff";
 
+    public double X { get; private set; }
+
+    public double Y { get; private set; }
+
     internal void SetDetails(
         string code,
         string name,
@@ -70,7 +78,9 @@ public sealed class WorkflowState : BaseEntity
         string? assigneeValue,
         string? formCode,
         string color,
-        WorkflowActionKey actionKey = WorkflowActionKey.None)
+        WorkflowActionKey actionKey = WorkflowActionKey.None,
+        double x = 0,
+        double y = 0)
     {
         if (string.IsNullOrWhiteSpace(code))
         {
@@ -118,6 +128,8 @@ public sealed class WorkflowState : BaseEntity
         AssigneeValue = string.IsNullOrWhiteSpace(assigneeValue) ? null : assigneeValue.Trim();
         FormCode = string.IsNullOrWhiteSpace(formCode) ? null : formCode.Trim();
         ActionKey = actionKey;
+        X = x;
+        Y = y;
         Color = string.IsNullOrWhiteSpace(color) ? "#1677ff" : color.Trim();
     }
 }

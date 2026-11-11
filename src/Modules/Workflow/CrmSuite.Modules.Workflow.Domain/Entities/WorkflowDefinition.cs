@@ -68,7 +68,9 @@ public sealed class WorkflowDefinition : BaseEntity
         string? assigneeValue,
         string? formCode,
         string color,
-        WorkflowActionKey actionKey = WorkflowActionKey.None)
+        WorkflowActionKey actionKey = WorkflowActionKey.None,
+        double x = 0,
+        double y = 0)
     {
         EnsureDraft("افزودن وضعیت");
         var normalizedCode = NormalizeStateCode(code);
@@ -94,7 +96,9 @@ public sealed class WorkflowDefinition : BaseEntity
             assigneeValue,
             formCode,
             color,
-            actionKey);
+            actionKey,
+            x,
+            y);
         States.Add(state);
         MarkUpdated(null, DateTime.UtcNow);
         return state;
@@ -113,7 +117,9 @@ public sealed class WorkflowDefinition : BaseEntity
         string color,
         Guid? userId,
         DateTime utcNow,
-        WorkflowActionKey actionKey = WorkflowActionKey.None)
+        WorkflowActionKey actionKey = WorkflowActionKey.None,
+        double x = 0,
+        double y = 0)
     {
         EnsureDraft("ویرایش وضعیت");
         var state = FindState(stateId);
@@ -142,7 +148,9 @@ public sealed class WorkflowDefinition : BaseEntity
             assigneeValue,
             formCode,
             color,
-            actionKey);
+            actionKey,
+            x,
+            y);
         MarkUpdated(userId, utcNow);
     }
 

@@ -28,6 +28,8 @@ export interface WorkflowState {
   formCode?: string | null;
   actionKey?: string | null;
   color: string;
+  x?: number;
+  y?: number;
 }
 
 export interface WorkflowTransition {

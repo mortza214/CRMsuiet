@@ -28,7 +28,8 @@ public sealed record ServiceRequestSummaryDto(
     string? WorkflowCode,
     string? WorkflowStateCode,
     string? WorkflowStateName,
-    string? WorkflowStatus);
+    string? WorkflowStatus,
+    Guid? SalesExpertId = null);
 
 public sealed record ServiceRequestDetailDto(
     Guid OrderId,
@@ -264,7 +265,8 @@ public sealed class GetCustomerServiceRequestsQueryHandler
                 workflow.Item2?.Code,
                 ServiceRequestQuerySupport.StateCode(workflow.Item1, workflow.Item2),
                 ServiceRequestQuerySupport.StateName(workflow.Item1, workflow.Item2),
-                workflow.Item1?.Status.ToString()));
+                workflow.Item1?.Status.ToString(),
+                order.SalesExpertId));
         }
 
         return Result.Success<IReadOnlyList<ServiceRequestSummaryDto>>(result);
@@ -444,7 +446,8 @@ public sealed class GetRecentServiceRequestsQueryHandler
                 workflow.Item2?.Code,
                 ServiceRequestQuerySupport.StateCode(workflow.Item1, workflow.Item2),
                 ServiceRequestQuerySupport.StateName(workflow.Item1, workflow.Item2),
-                workflow.Item1?.Status.ToString()));
+                workflow.Item1?.Status.ToString(),
+                order.SalesExpertId));
         }
 
         return Result.Success<IReadOnlyList<ServiceRequestSummaryDto>>(result);
