@@ -280,28 +280,6 @@ public sealed class CreateServiceRequestCommandHandler
                 "SALES_WORKFLOW_START_FAILED");
         }
 
-        var started = await _workflow.GetActiveAsync(order.Id, cancellationToken);
-        if (started is not null
-            && !string.Equals(definitionCode, BandwidthWorkflowCodes.Bandwidth, StringComparison.OrdinalIgnoreCase))
-        {
-            var firstTarget = requiresFeasibility ? "FEASIBILITY_TRIAGE" : "EQUIPMENT_SUPPLY";
-            var firstMove = await _workflow.MoveAsync(
-                started.Value.Instance,
-                started.Value.Definition,
-                firstTarget,
-                JsonSerializer.Serialize(new { startedAt = now, source = "ServiceRequest" }),
-                "شروع خودکار مسیر سرویس",
-                cancellationToken);
-            if (firstMove.IsFailure)
-            {
-                return Result.Failure<ServiceRequestResultDto>(
-                    firstMove.Errors,
-                    firstMove.Message);
-            }
-
-            workflow = firstMove.Value;
-        }
-
         return Result.Success(new ServiceRequestResultDto(
             order.Id,
             order.OrderNumber,
@@ -327,7 +305,10 @@ public sealed class CreateServiceRequestCommandHandler
             }
         }
 
-        return BandwidthWorkflowCodes.Bandwidth;
+        var published = await _definitions.GetPublishedByEntityTypeAsync(
+            WorkflowEntityType.Order,
+            cancellationToken);
+        return published?.Code;
     }
 
     private static string ReadString(string json, params string[] keys)

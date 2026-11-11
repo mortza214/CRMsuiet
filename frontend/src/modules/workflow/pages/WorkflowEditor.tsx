@@ -30,6 +30,7 @@ import {
 import { useNavigate, useParams } from "react-router-dom";
 import { useAuthStore } from "@/modules/auth/store";
 import { useCustomerOwners } from "@/modules/customers/hooks/useCustomers";
+import { useFormTemplates } from "@/modules/forms/hooks/useForms";
 import { useRoles } from "@/modules/settings/hooks/useSettings";
 import { useDepartments } from "@/modules/tickets/hooks/useTickets";
 import {
@@ -65,6 +66,23 @@ const assigneeLabels: Record<WorkflowAssigneeType, string> = {
   None: "بدون مسئول",
 };
 
+const actionKeyLabels: Record<string, string> = {
+  None: "بدون اکشن",
+  FillForm: "تکمیل فرم",
+  ReviewFeasibility: "بررسی امکان‌سنجی",
+  DecideSiteVisit: "تصمیم مراجعه حضوری",
+  SelectEquipment: "انتخاب تجهیزات",
+  PurchaseEquipment: "خرید تجهیزات",
+  IssueProforma: "صدور پیش‌فاکتور",
+  CustomerAction: "اقدام مشتری",
+  IssueFinalInvoice: "صدور فاکتور نهایی",
+  PayInvoice: "پرداخت فاکتور",
+  VerifyPayment: "تأیید پرداخت",
+  SignContract: "امضای قرارداد",
+  ActivateService: "فعال‌سازی سرویس",
+  RequestPayment: "درخواست پرداخت",
+};
+
 const guardLabels: Record<WorkflowGuardType, string> = {
   None: "بدون Guard",
   PermissionOnly: "فقط Permission",
@@ -80,6 +98,7 @@ interface StateForm {
   assigneeType: WorkflowAssigneeType;
   assigneeValue?: string;
   formCode?: string;
+  actionKey: string;
   color: string;
 }
 
@@ -104,6 +123,7 @@ export function WorkflowEditor() {
   const users = useCustomerOwners(canManage);
   const roles = useRoles(canManage);
   const departments = useDepartments(canManage);
+  const formTemplates = useFormTemplates(false);
   const [stateOpen, setStateOpen] = useState(false);
   const [editingState, setEditingState] = useState<WorkflowState | null>(null);
   const [transitionOpen, setTransitionOpen] = useState(false);
@@ -168,6 +188,7 @@ export function WorkflowEditor() {
       order: states.length + 1,
       isFinal: false,
       assigneeType: "None",
+      actionKey: "None",
       color: "#1677ff",
     });
     setStateOpen(true);
@@ -184,6 +205,7 @@ export function WorkflowEditor() {
       assigneeType: state.assigneeType,
       assigneeValue: state.assigneeValue ?? undefined,
       formCode: state.formCode ?? undefined,
+      actionKey: state.actionKey ?? "None",
       color: state.color,
     });
     setStateOpen(true);
@@ -202,6 +224,7 @@ export function WorkflowEditor() {
           ? null
           : values.assigneeValue?.trim() || null,
       formCode: values.formCode?.trim() || null,
+      actionKey: values.actionKey,
       color: values.color,
     };
 
@@ -308,6 +331,12 @@ export function WorkflowEditor() {
       dataIndex: "assigneeType",
       width: 120,
       render: (value: WorkflowAssigneeType) => assigneeLabels[value] ?? value,
+    },
+    {
+      title: "اکشن",
+      dataIndex: "actionKey",
+      width: 145,
+      render: (value: string | null) => actionKeyLabels[value ?? "None"] ?? value,
     },
     {
       title: "فرم",
@@ -568,6 +597,59 @@ export function WorkflowEditor() {
         />
       </Card>
 
+      <Card
+        title="پیش‌نمایش مسیر گردش کار"
+        variant="borderless"
+        className="settings-section-card"
+      >
+        {states.length === 0 ? (
+          <Typography.Text type="secondary">هنوز مرحله‌ای تعریف نشده است.</Typography.Text>
+        ) : (
+          <Space direction="vertical" size={10} style={{ width: "100%" }}>
+            {[...states]
+              .sort((a, b) => a.order - b.order)
+              .map((state) => {
+                const outbound = transitions.filter(
+                  (transition) => transition.fromStateId === state.id,
+                );
+                return (
+                  <div
+                    key={state.id}
+                    style={{
+                      border: `1px solid ${state.color || "#d9d9d9"}`,
+                      borderInlineStartWidth: 5,
+                      borderRadius: 8,
+                      padding: "10px 12px",
+                      background: "#fff",
+                    }}
+                  >
+                    <Space wrap>
+                      <Tag color={state.stateType === "Start" ? "blue" : state.stateType === "End" ? "green" : "default"}>
+                        {stateTypeLabels[state.stateType]}
+                      </Tag>
+                      <Typography.Text strong>{state.name}</Typography.Text>
+                      <Typography.Text type="secondary" dir="ltr">
+                        {state.code}
+                      </Typography.Text>
+                      {state.formCode && <Tag color="purple">{state.formCode}</Tag>}
+                    </Space>
+                    {outbound.length > 0 && (
+                      <div style={{ marginTop: 8, paddingInlineStart: 12 }}>
+                        {outbound.map((transition) => (
+                          <Typography.Text key={transition.id} type="secondary">
+                            ↳ {transition.name} → {stateName(transition.toStateId)}
+                            <br />
+                          </Typography.Text>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                );
+              })}
+          </Space>
+        )}
+      </Card>
+
       <Modal
         title={editingState ? "ویرایش وضعیت" : "افزودن وضعیت"}
         open={stateOpen}
@@ -641,8 +723,25 @@ export function WorkflowEditor() {
               />
             </Form.Item>
           )}
-          <Form.Item name="formCode" label="کد فرم (اختیاری)">
-            <Input placeholder="FormCode" dir="ltr" />
+          <Form.Item name="actionKey" label="اکشن مرحله">
+            <Select
+              options={Object.entries(actionKeyLabels).map(([value, label]) => ({
+                value,
+                label,
+              }))}
+            />
+          </Form.Item>
+          <Form.Item name="formCode" label="فرم متصل (اختیاری)">
+            <Select
+              allowClear
+              showSearch
+              optionFilterProp="label"
+              placeholder="انتخاب فرم"
+              options={(formTemplates.data ?? []).map((template) => ({
+                value: template.code,
+                label: `${template.title} (${template.code})`,
+              }))}
+            />
           </Form.Item>
         </Form>
       </Modal>

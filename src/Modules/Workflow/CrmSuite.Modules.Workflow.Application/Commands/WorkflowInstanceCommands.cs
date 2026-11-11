@@ -10,7 +10,8 @@ public sealed record StartWorkflowCommand(
     Guid EntityId,
     string? DefinitionCode,
     string? InitialPayload = null,
-    string? IdempotencyKey = null) : IRequest<Result<WorkflowInstanceDto>>;
+    string? IdempotencyKey = null,
+    Guid? DefinitionId = null) : IRequest<Result<WorkflowInstanceDto>>;
 
 public sealed record ExecuteWorkflowTransitionCommand(
     Guid InstanceId,

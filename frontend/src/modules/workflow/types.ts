@@ -26,6 +26,7 @@ export interface WorkflowState {
   assigneeType: WorkflowAssigneeType;
   assigneeValue?: string | null;
   formCode?: string | null;
+  actionKey?: string | null;
   color: string;
 }
 

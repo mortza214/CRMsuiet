@@ -126,6 +126,10 @@ public sealed class BandwidthWorkflowSelectionTests
             clock.SetupGet(provider => provider.UtcNow).Returns(DateTime.UtcNow);
 
             var definition = BuildDefinition();
+            definitions.Setup(repository => repository.GetPublishedByEntityTypeAsync(
+                    WorkflowEntityType.Order,
+                    It.IsAny<CancellationToken>()))
+                .ReturnsAsync(definition);
             var state = definition.States.First();
             var instance = new WorkflowInstance(
                 definition,

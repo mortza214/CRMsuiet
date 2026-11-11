@@ -99,17 +99,28 @@ export function WorkflowInbox() {
     setActionOpen(true);
   };
 
-  const submitAction = async (values: ActionForm) => {
+  const submitAction = async (values: ActionForm, transitionId?: string) => {
     const actionKey = selectedTaskAction?.actionKey ?? "None";
-    const actionPayload = actionKey === "FillForm"
-      ? actionData
+    const selectedTransition = selectedTask?.availableTransitions.find(
+      (transition) => transition.id === transitionId,
+    );
+    const normalizedData = { ...actionData };
+    if (actionKey === "CustomerAction" && !normalizedData.decision) {
+      normalizedData.decision = selectedTransition?.name.includes("انصراف")
+        ? "cancel"
+        : "approve";
+    }
+
+    const actionPayload = actionKey === "FillForm" || selectedTaskAction?.formCode
+      ? normalizedData
       : {
-          ...actionData,
+          ...normalizedData,
           comment: values.comment?.trim() || undefined,
         };
 
     try {
       await execute.mutateAsync({
+        transitionId,
         actionDataJson: JSON.stringify(actionPayload),
       });
       message.success("اکشن با موفقیت اجرا شد.");
@@ -284,10 +295,28 @@ export function WorkflowInbox() {
         title={`اقدام روی: ${selectedTask?.definitionName ?? ""}`}
         open={actionOpen}
         onCancel={() => setActionOpen(false)}
-        onOk={() => actionForm.submit()}
-        okText={selectedTaskAction?.actionKey === "FillForm" ? "ثبت و ارجاع" : "ثبت اقدام"}
-        cancelText="انصراف"
         confirmLoading={execute.isPending}
+        footer={
+          <Space>
+            <Button onClick={() => setActionOpen(false)}>انصراف</Button>
+            {(selectedTask?.availableTransitions ?? []).map((transition) => (
+              <Button
+                key={transition.id}
+                type="primary"
+                loading={execute.isPending}
+                onClick={() =>
+                  actionForm.validateFields().then((values) =>
+                    submitAction(values, transition.id),
+                  )
+                }
+              >
+                {selectedTask?.availableTransitions.length === 1
+                  ? "ثبت و ارجاع"
+                  : transition.name}
+              </Button>
+            ))}
+          </Space>
+        }
       >
         <Form form={actionForm} layout="vertical" onFinish={submitAction}>
 
@@ -335,12 +364,14 @@ export function WorkflowInbox() {
             </>
           )}
 
-          {selectedTaskAction?.actionKey === "FillForm" && (
-            <WorkflowFormRenderer
-              formCode={selectedTaskAction?.formCode}
-              onDataChange={setActionData}
-            />
-          )}
+          {selectedTaskAction?.formCode &&
+            selectedTaskAction.actionKey !== "ReviewFeasibility" &&
+            selectedTaskAction.actionKey !== "DecideSiteVisit" && (
+              <WorkflowFormRenderer
+                formCode={selectedTaskAction.formCode}
+                onDataChange={setActionData}
+              />
+            )}
 
           {selectedTaskAction?.actionKey === "SelectEquipment" && (
             <Form.Item label="روش تأمین تجهیزات" required>
@@ -499,12 +530,12 @@ export function WorkflowInbox() {
             />
           )}
 
-          {selectedTaskAction?.actionKey !== "FillForm" && (
+          {!selectedTaskAction?.formCode && (
             <Form.Item name="comment" label="توضیح / دلیل">
               <Input.TextArea rows={3} placeholder="توضیح اقدام (در صورت نیاز)" />
             </Form.Item>
           )}
-          {selectedTaskAction?.actionKey !== "FillForm" &&
+          {!selectedTaskAction?.formCode &&
             selectedTaskAction?.actionKey !== "None" ? (
             <Form.Item name="payloadJson" label="Payload (JSON، اختیاری)">
               <Input.TextArea rows={3} placeholder='{"key":"value"}' dir="ltr" />

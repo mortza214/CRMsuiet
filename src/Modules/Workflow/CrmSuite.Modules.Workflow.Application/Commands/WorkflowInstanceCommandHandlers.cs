@@ -69,7 +69,13 @@ public sealed class StartWorkflowCommandHandler
         CancellationToken cancellationToken)
     {
         WorkflowDefinition? definition;
-        if (string.IsNullOrWhiteSpace(request.DefinitionCode))
+        if (request.DefinitionId.HasValue)
+        {
+            definition = await _definitions.GetByIdWithGraphAsync(
+                request.DefinitionId.Value,
+                cancellationToken);
+        }
+        else if (string.IsNullOrWhiteSpace(request.DefinitionCode))
         {
             definition = await _definitions.GetPublishedByEntityTypeAsync(
                 request.EntityType,

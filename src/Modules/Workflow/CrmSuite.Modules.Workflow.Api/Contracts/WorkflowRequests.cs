@@ -64,6 +64,8 @@ public sealed class WorkflowTransitionRequest
 
 public sealed class StartWorkflowRequest
 {
+    public Guid? DefinitionId { get; init; }
+
     public WorkflowEntityType EntityType { get; init; }
 
     public Guid EntityId { get; init; }

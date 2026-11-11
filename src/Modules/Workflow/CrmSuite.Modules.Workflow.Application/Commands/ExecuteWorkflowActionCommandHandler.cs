@@ -46,10 +46,11 @@ public sealed class ExecuteWorkflowActionCommandHandler
         var (order, instance, definition) = loaded.Value;
         var state = definition.FindState(instance.CurrentStateId);
         var transitionId = request.TransitionId
-                           ?? ChooseAutomaticTransition(
-                               state,
-                               definition,
-                               request.ActionDataJson ?? "{}");
+                           ?? definition.Transitions
+                               .Where(item => item.FromStateId == state.Id)
+                               .OrderBy(item => item.SortOrder)
+                               .Select(item => (Guid?)item.Id)
+                               .FirstOrDefault();
         if (!transitionId.HasValue
             && state.ActionKey != WorkflowActionKey.ActivateService)
         {
@@ -115,65 +116,6 @@ public sealed class ExecuteWorkflowActionCommandHandler
         }
 
         return transition;
-    }
-
-    private static Guid? ChooseAutomaticTransition(
-        WorkflowState state,
-        WorkflowDefinition definition,
-        string actionData)
-    {
-        var transitions = definition.Transitions
-            .Where(item => item.FromStateId == state.Id)
-            .OrderBy(item => item.SortOrder)
-            .ToArray();
-        if (transitions.Length <= 1)
-        {
-            return transitions.FirstOrDefault()?.Id;
-        }
-
-        using var document = JsonDocument.Parse(
-            string.IsNullOrWhiteSpace(actionData) ? "{}" : actionData);
-        var root = document.RootElement;
-
-        var targetCode = state.Code switch
-        {
-            "INITIAL_REQUEST" => root.TryGetProperty("substrate", out var substrate)
-                                 && substrate.ValueKind == JsonValueKind.String
-                                 && substrate.GetString() is "fiber" or "cable"
-                ? "EQUIPMENT_SUPPLY"
-                : "FEASIBILITY_PENDING",
-            "EQUIPMENT_SUPPLY" => root.TryGetProperty("mode", out var equipmentMode)
-                                  && equipmentMode.ValueKind == JsonValueKind.String
-                                  && equipmentMode.GetString() == "Purchase"
-                ? "PURCHASE_PENDING"
-                : "PROFORMA",
-            "CUSTOMER_APPROVAL" => root.TryGetProperty("decision", out var decision)
-                                   && decision.ValueKind == JsonValueKind.String
-                                   && decision.GetString() == "cancel"
-                ? "CANCELLED"
-                : "INSTALLATION_PENDING",
-            "PAYMENT_PENDING" => root.TryGetProperty("paymentMode", out var paymentMode)
-                                 && paymentMode.ValueKind == JsonValueKind.String
-                                 && paymentMode.GetString() == "ManualDeposit"
-                ? "FINANCE_REVIEW"
-                : root.TryGetProperty("cooperationType", out var cooperation)
-                  && cooperation.ValueKind == JsonValueKind.String
-                  && cooperation.GetString() == "contract"
-                    ? "CONTRACT"
-                    : "COMPLETED",
-            "FINANCE_REVIEW" => root.TryGetProperty("approved", out var approved)
-                                && approved.ValueKind == JsonValueKind.True
-                ? "CONTRACT"
-                : "PAYMENT_PENDING",
-            _ => null,
-        };
-
-        return transitions
-                   .FirstOrDefault(item =>
-                       item.ToStateId == definition.States
-                           .FirstOrDefault(target => target.Code == targetCode)?.Id)
-                   ?.Id
-               ?? transitions[0].Id;
     }
 
     private Task<Result> ExecuteActionAsync(
