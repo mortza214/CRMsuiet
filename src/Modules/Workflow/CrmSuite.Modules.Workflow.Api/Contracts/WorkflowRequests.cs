@@ -88,7 +88,7 @@ public sealed class ExecuteWorkflowTransitionRequest
 
 public sealed class ExecuteWorkflowActionRequest
 {
-    public Guid TransitionId { get; init; }
+    public Guid? TransitionId { get; init; }
 
     public string? ActionDataJson { get; init; }
 }

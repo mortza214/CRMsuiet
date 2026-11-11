@@ -302,7 +302,7 @@ export function useExecuteWorkflowAction(instanceId: string | undefined) {
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: async (payload: {
-      transitionId: string;
+      transitionId?: string;
       actionDataJson?: string | null;
     }) => {
       const response = await api.post<ApiEnvelope<WorkflowInstance>>(

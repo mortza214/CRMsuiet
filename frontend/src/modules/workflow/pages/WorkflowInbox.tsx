@@ -63,16 +63,20 @@ export function WorkflowInbox() {
   const [status, setStatus] = useState<WorkflowTaskStatus | undefined>();
   const [departmentId, setDepartmentId] = useState<string | undefined>();
   const [selectedTask, setSelectedTask] = useState<WorkflowTask | null>(null);
+  const [selectedTaskAction, setSelectedTaskAction] = useState<{
+    actionKey: string;
+    formCode?: string;
+  } | null>(null);
   const [actionOpen, setActionOpen] = useState(false);
-  const [actionData, setActionData] = useState<Record<string, unknown>>({});
+  const [formData, setFormData] = useState<Record<string, unknown>>({});
   const [actionForm] = Form.useForm<ActionForm>();
   const tasks = useMyWorkflowTasks(status, departmentId);
   const departments = useDepartments(canReadDepartments);
   const settingsDepartments = useSettingsDepartments(
-    canReadDepartments && selectedTask?.actionKey === "DecideSiteVisit",
+    canReadDepartments && selectedTaskAction?.actionKey === "DecideSiteVisit",
   );
   const expertsQuery = useWorkflowExperts(
-    selectedTask?.actionKey === "DecideSiteVisit",
+    selectedTaskAction?.actionKey === "DecideSiteVisit",
   );
   const technicalDepartment = settingsDepartments.data?.find(
     (department) => department.name === "فنی",
@@ -84,24 +88,35 @@ export function WorkflowInbox() {
   );
   const expertCandidates =
     technicalExperts.length > 0 ? technicalExperts : (expertsQuery.data ?? []);
-  const template = useFormTemplateByCode(selectedTask?.formCode ?? undefined);
+  const template = useFormTemplateByCode(selectedTaskAction?.formCode);
   const execute = useExecuteWorkflowAction(selectedTask?.instanceId);
 
   const openAction = (task: WorkflowTask) => {
     setSelectedTask(task);
-    setActionData({});
+    setSelectedTaskAction({
+      actionKey: task.actionKey || "None",
+      formCode: task.formCode || undefined,
+    });
+    setFormData({});
     actionForm.resetFields();
     setActionOpen(true);
   };
 
   const submitAction = async (values: ActionForm) => {
+    const actionKey = selectedTaskAction?.actionKey ?? "None";
+    const actionPayload = actionKey === "FillForm"
+      ? formData
+      : {
+          ...formData,
+          comment: values.comment?.trim() || undefined,
+        };
+
     try {
       await execute.mutateAsync({
-        transitionId: values.transitionId,
-        actionDataJson: JSON.stringify({
-          ...actionData,
-          comment: values.comment?.trim() || undefined,
-        }),
+        transitionId: actionKey === "FillForm" || actionKey === "None"
+          ? undefined
+          : values.transitionId,
+        actionDataJson: JSON.stringify(actionPayload),
       });
       message.success("اکشن با موفقیت اجرا شد.");
       setActionOpen(false);
@@ -109,6 +124,7 @@ export function WorkflowInbox() {
       // NotificationProvider handles errors.
     }
   };
+
   const columns: TableColumnsType<WorkflowTask> = [
     {
       title: "گردش کار",
@@ -275,39 +291,42 @@ export function WorkflowInbox() {
         open={actionOpen}
         onCancel={() => setActionOpen(false)}
         onOk={() => actionForm.submit()}
-        okText="ثبت اقدام"
+        okText={selectedTaskAction?.actionKey === "FillForm" ? "ثبت و ارجاع" : "ثبت اقدام"}
         cancelText="انصراف"
         confirmLoading={execute.isPending}
       >
         <Form form={actionForm} layout="vertical" onFinish={submitAction}>
-          <Form.Item
-            name="transitionId"
-            label="گذار"
-            rules={[{ required: true, message: "گذار را انتخاب کنید." }]}
-          >
-            <Select
-              options={(selectedTask?.availableTransitions ?? []).map((transition) => ({
-                value: transition.id,
-                label: transition.name,
-              }))}
-            />
-          </Form.Item>
-          {selectedTask?.actionKey === "DecideSiteVisit" && (
+          {selectedTaskAction?.actionKey !== "FillForm" &&
+            selectedTaskAction?.actionKey !== "None" && (
+            <Form.Item
+              name="transitionId"
+              label="گذار"
+              rules={[{ required: true, message: "گذار را انتخاب کنید." }]}
+            >
+              <Select
+                options={(selectedTask?.availableTransitions ?? []).map((transition) => ({
+                  value: transition.id,
+                  label: transition.name,
+                }))}
+              />
+            </Form.Item>
+          )}
+          {selectedTaskAction?.actionKey === "DecideSiteVisit" && (
             <>
               <WorkflowFormRenderer
                 schemaJson={template.data?.schemaJson}
-                values={actionData}
-                onChange={setActionData}
+                values={formData}
+                onChange={setFormData}
               />
-              {actionData.needs_visit === "yes" && (
+              {formData.needs_visit === "yes" && (
                 <Form.Item label="کارشناس فنی" required>
                   <Select
                     showSearch
                     optionFilterProp="label"
                     placeholder="انتخاب کارشناس فنی"
-                    value={actionData.expert_user_id as string | undefined}
+                    value={formData.expert_user_id as string | undefined}
                     onChange={(value) =>
-                      setActionData((current) => ({
+                      setFormData((current) => ({
                         ...current,
                         expert_user_id: value,
                       }))
@@ -322,27 +341,27 @@ export function WorkflowInbox() {
             </>
           )}
 
-          {selectedTask?.actionKey === "FillForm" && (
+          {selectedTaskAction?.actionKey === "FillForm" && (
             <WorkflowFormRenderer
               schemaJson={template.data?.schemaJson}
-              values={actionData}
-              onChange={setActionData}
+              values={formData}
+              onChange={setFormData}
             />
           )}
 
-          {selectedTask?.actionKey === "IssueProforma" && (
+          {selectedTaskAction?.actionKey === "IssueProforma" && (
             <>
               <Form.Item label="مبلغ پیش‌فاکتور (اختیاری؛ پیش‌فرض Snapshot سرویس)">
                 <InputNumber
                   style={{ width: "100%" }}
-                  value={typeof actionData.amount === "number" ? actionData.amount : undefined}
-                  onChange={(value) => setActionData((current) => ({ ...current, amount: value }))}
+                  value={typeof formData.amount === "number" ? formData.amount : undefined}
+                  onChange={(value) => setFormData((current) => ({ ...current, amount: value }))}
                 />
               </Form.Item>
               <Form.Item label="روش پرداخت">
                 <Select
-                  value={(actionData.paymentMode as string | undefined) ?? "Gateway"}
-                  onChange={(value) => setActionData((current) => ({ ...current, paymentMode: value }))}
+                  value={(formData.paymentMode as string | undefined) ?? "Gateway"}
+                  onChange={(value) => setFormData((current) => ({ ...current, paymentMode: value }))}
                   options={[
                     { value: "Gateway", label: "درگاه پرداخت" },
                     { value: "ManualDeposit", label: "واریز / فیش" },
@@ -351,8 +370,8 @@ export function WorkflowInbox() {
               </Form.Item>
               <Form.Item label="نوع فاکتور">
                 <Select
-                  value={(actionData.invoiceType as string | undefined) ?? "Proforma"}
-                  onChange={(value) => setActionData((current) => ({ ...current, invoiceType: value }))}
+                  value={(formData.invoiceType as string | undefined) ?? "Proforma"}
+                  onChange={(value) => setFormData((current) => ({ ...current, invoiceType: value }))}
                   options={[
                     { value: "Official", label: "رسمی" },
                     { value: "Unofficial", label: "غیررسمی" },
@@ -361,14 +380,14 @@ export function WorkflowInbox() {
               </Form.Item>
               <Form.Item label="الزام به پرداخت">
                 <Switch
-                  checked={actionData.requiresPayment !== false}
-                  onChange={(value) => setActionData((current) => ({ ...current, requiresPayment: value }))}
+                  checked={formData.requiresPayment !== false}
+                  onChange={(value) => setFormData((current) => ({ ...current, requiresPayment: value }))}
                 />
               </Form.Item>
             </>
           )}
 
-          {selectedTask?.actionKey === "RequestPayment" && (
+          {selectedTaskAction?.actionKey === "RequestPayment" && (
             <>
               <Alert
                 type="info"
@@ -379,14 +398,14 @@ export function WorkflowInbox() {
               <Form.Item label="تأیید پیش‌فاکتور / پرداخت">
                 <Space direction="vertical">
                   <Checkbox
-                    checked={Boolean(actionData.approved)}
-                    onChange={(event) => setActionData((current) => ({ ...current, approved: event.target.checked }))}
+                    checked={Boolean(formData.approved)}
+                    onChange={(event) => setFormData((current) => ({ ...current, approved: event.target.checked }))}
                   >
                     پیش‌فاکتور تأیید شد
                   </Checkbox>
                   <Checkbox
-                    checked={Boolean(actionData.paid)}
-                    onChange={(event) => setActionData((current) => ({ ...current, paid: event.target.checked }))}
+                    checked={Boolean(formData.paid)}
+                    onChange={(event) => setFormData((current) => ({ ...current, paid: event.target.checked }))}
                   >
                     پرداخت تأیید شد
                   </Checkbox>
@@ -395,14 +414,14 @@ export function WorkflowInbox() {
               <Form.Item label="شناسه فاکتور (اختیاری)">
                 <Input
                   dir="ltr"
-                  value={String(actionData.invoiceId ?? "")}
-                  onChange={(event) => setActionData((current) => ({ ...current, invoiceId: event.target.value }))}
+                  value={String(formData.invoiceId ?? "")}
+                  onChange={(event) => setFormData((current) => ({ ...current, invoiceId: event.target.value }))}
                 />
               </Form.Item>
             </>
           )}
 
-          {selectedTask?.actionKey === "ActivateService" && (
+          {selectedTaskAction?.actionKey === "ActivateService" && (
             <Alert
               type="success"
               showIcon
@@ -411,10 +430,13 @@ export function WorkflowInbox() {
             />
           )}
 
-          <Form.Item name="comment" label="توضیح / دلیل">
-            <Input.TextArea rows={3} placeholder="توضیح اقدام (در صورت نیاز)" />
-          </Form.Item>
-          {!selectedTask?.actionKey || selectedTask.actionKey === "None" ? (
+          {selectedTaskAction?.actionKey !== "FillForm" && (
+            <Form.Item name="comment" label="توضیح / دلیل">
+              <Input.TextArea rows={3} placeholder="توضیح اقدام (در صورت نیاز)" />
+            </Form.Item>
+          )}
+          {selectedTaskAction?.actionKey !== "FillForm" &&
+            selectedTaskAction?.actionKey !== "None" ? (
             <Form.Item name="payloadJson" label="Payload (JSON، اختیاری)">
               <Input.TextArea rows={3} placeholder='{"key":"value"}' dir="ltr" />
             </Form.Item>

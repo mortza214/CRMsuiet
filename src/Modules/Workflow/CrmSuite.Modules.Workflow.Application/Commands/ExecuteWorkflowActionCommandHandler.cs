@@ -43,12 +43,26 @@ public sealed class ExecuteWorkflowActionCommandHandler
 
         var (order, instance, definition) = loaded.Value;
         var state = definition.FindState(instance.CurrentStateId);
+        var transitionId = request.TransitionId
+                           ?? definition.Transitions
+                               .Where(item => item.FromStateId == state.Id)
+                               .OrderBy(item => item.SortOrder)
+                               .Select(item => (Guid?)item.Id)
+                               .FirstOrDefault();
+        if (!transitionId.HasValue
+            && state.ActionKey != WorkflowActionKey.ActivateService)
+        {
+            return Result.Failure<WorkflowInstanceDto>(
+                "گذاری برای این مرحله تعریف نشده است.",
+                "WORKFLOW_TRANSITION_NOT_FOUND");
+        }
+
         var context = new WorkflowActionContext(
             order,
             instance,
             definition,
             state,
-            request.TransitionId,
+            transitionId ?? Guid.Empty,
             request.ActionDataJson ?? "{}");
 
         var actionResult = await ExecuteActionAsync(state.ActionKey, context, cancellationToken);
@@ -70,7 +84,7 @@ public sealed class ExecuteWorkflowActionCommandHandler
         var transition = await _mediator.Send(
             new ExecuteWorkflowTransitionCommand(
                 instance.Id,
-                request.TransitionId,
+                transitionId!.Value,
                 null,
                 request.ActionDataJson),
             cancellationToken);

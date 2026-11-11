@@ -6,5 +6,5 @@ namespace CrmSuite.Modules.Workflow.Application.Commands;
 
 public sealed record ExecuteWorkflowActionCommand(
     Guid InstanceId,
-    Guid TransitionId,
+    Guid? TransitionId = null,
     string? ActionDataJson = null) : IRequest<Result<WorkflowInstanceDto>>;
