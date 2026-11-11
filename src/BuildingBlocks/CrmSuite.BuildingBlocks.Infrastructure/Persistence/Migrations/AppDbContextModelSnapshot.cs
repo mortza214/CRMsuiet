@@ -4546,6 +4546,11 @@ namespace CrmSuite.BuildingBlocks.Infrastructure.Persistence.Migrations
                         .HasColumnType("char(36)")
                         .HasColumnName("id");
 
+                    b.Property<string>("ActionKey")
+                        .HasMaxLength(40)
+                        .HasColumnType("varchar(40)")
+                        .HasColumnName("action_key");
+
                     b.Property<Guid?>("AssignedDepartmentId")
                         .HasColumnType("char(36)")
                         .HasColumnName("assigned_department_id");
@@ -4585,6 +4590,11 @@ namespace CrmSuite.BuildingBlocks.Infrastructure.Persistence.Migrations
                     b.Property<DateTime?>("DueDate")
                         .HasColumnType("datetime(6)")
                         .HasColumnName("due_date");
+
+                    b.Property<string>("FormCode")
+                        .HasMaxLength(100)
+                        .HasColumnType("varchar(100)")
+                        .HasColumnName("form_code");
 
                     b.Property<Guid>("InstanceId")
                         .HasColumnType("char(36)")

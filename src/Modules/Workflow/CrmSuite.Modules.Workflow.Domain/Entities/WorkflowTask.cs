@@ -45,6 +45,10 @@ public sealed class WorkflowTask : BaseEntity
 
     public WorkflowTaskStatus Status { get; private set; }
 
+    public string? ActionKey { get; private set; }
+
+    public string? FormCode { get; private set; }
+
     public DateTime? DueDate { get; private set; }
 
     public Guid? CompletedBy { get; private set; }
@@ -68,6 +72,12 @@ public sealed class WorkflowTask : BaseEntity
         AssignedDepartmentId = departmentId;
         Status = WorkflowTaskStatus.Pending;
         MarkUpdated(actorId, utcNow);
+    }
+
+    public void SetActionOverride(string? actionKey, string? formCode)
+    {
+        ActionKey = string.IsNullOrWhiteSpace(actionKey) ? null : actionKey.Trim();
+        FormCode = string.IsNullOrWhiteSpace(formCode) ? null : formCode.Trim();
     }
 
     public void Start(Guid? userId, DateTime utcNow)

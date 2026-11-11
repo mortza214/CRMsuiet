@@ -99,6 +99,15 @@ public sealed class ExecuteWorkflowActionCommandHandler
             }
         }
 
+        var activeTask = instance.Tasks.FirstOrDefault(task =>
+            task.Status is WorkflowTaskStatus.Pending or WorkflowTaskStatus.InProgress);
+        var effectiveActionKey = state.ActionKey;
+        if (activeTask?.ActionKey is not null
+            && Enum.TryParse<WorkflowActionKey>(activeTask.ActionKey, true, out var overrideAction))
+        {
+            effectiveActionKey = overrideAction;
+        }
+
         var context = new WorkflowActionContext(
             order,
             instance,
@@ -107,7 +116,7 @@ public sealed class ExecuteWorkflowActionCommandHandler
             transitionId ?? Guid.Empty,
             request.ActionDataJson ?? "{}");
 
-        var actionResult = await ExecuteActionAsync(state.ActionKey, context, cancellationToken);
+        var actionResult = await ExecuteActionAsync(effectiveActionKey, context, cancellationToken);
         if (actionResult.IsFailure)
         {
             return Result.Failure<WorkflowInstanceDto>(
@@ -116,7 +125,7 @@ public sealed class ExecuteWorkflowActionCommandHandler
         }
 
         // ActivateService is the end-state action and does not transition anywhere.
-        if (state.ActionKey == WorkflowActionKey.ActivateService)
+        if (effectiveActionKey == WorkflowActionKey.ActivateService)
         {
             return await _mediator.Send(
                 new GetWorkflowInstanceQuery(instance.Id),

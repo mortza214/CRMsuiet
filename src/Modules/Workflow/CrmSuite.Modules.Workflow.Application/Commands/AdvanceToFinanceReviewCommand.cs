@@ -92,7 +92,7 @@ public sealed class AdvanceToFinanceReviewCommandHandler
                     task.Status == WorkflowTaskStatus.Pending
                     && task.AssignedRoleId == financeRole.Id))
             {
-                instance.AddTask(new WorkflowTask(
+                var fallbackTask = new WorkflowTask(
                     instance.Id,
                     current.Id,
                     null,
@@ -100,7 +100,9 @@ public sealed class AdvanceToFinanceReviewCommandHandler
                     null,
                     null,
                     _currentUser.UserId,
-                    _clock.UtcNow));
+                    _clock.UtcNow);
+                fallbackTask.SetActionOverride("VerifyPayment", null);
+                instance.AddTask(fallbackTask);
                 await _unitOfWork.SaveChangesAsync(cancellationToken);
             }
 

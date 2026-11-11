@@ -132,6 +132,8 @@ public sealed class WorkflowTaskConfiguration : BaseEntityConfiguration<Workflow
         builder.Property(task => task.StateId).HasColumnName("state_id").IsRequired();
         builder.Property(task => task.AssignedUserId).HasColumnName("assigned_user_id");
         builder.Property(task => task.AssignedRoleId).HasColumnName("assigned_role_id");
+        builder.Property(task => task.ActionKey).HasColumnName("action_key").HasMaxLength(40);
+        builder.Property(task => task.FormCode).HasColumnName("form_code").HasMaxLength(100);
         builder.Property(task => task.AssignedDepartmentId).HasColumnName("assigned_department_id");
         builder.Property(task => task.Status).HasColumnName("status").HasConversion<string>().HasMaxLength(30).IsRequired();
         builder.Property(task => task.DueDate).HasColumnName("due_date").HasColumnType("datetime(6)");

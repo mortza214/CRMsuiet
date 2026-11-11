@@ -175,8 +175,8 @@ public sealed class WorkflowDtoMapper
                 .ToArray(),
             EntityDisplayName: null,
             EntityReference: null,
-            ActionKey: current.ActionKey.ToString(),
-            FormCode: current.FormCode);
+            ActionKey: task.ActionKey ?? current.ActionKey.ToString(),
+            FormCode: task.FormCode ?? current.FormCode);
     }
 
     public WorkflowHistoryDto ToHistory(
