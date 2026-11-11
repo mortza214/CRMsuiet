@@ -79,34 +79,7 @@ public sealed class AdvanceToFinanceReviewCommandHandler
             && definition.FindState(item.ToStateId).Code == "FINANCE_REVIEW");
         if (transition is null)
         {
-            var roles = await _roles.GetAllAsync(includePermissions: false, cancellationToken);
-            var financeRole = roles.FirstOrDefault(role => role.Name == "FinanceExpert");
-            if (financeRole is null)
-            {
-                return Result.Failure(
-                    "گذار تایید مالی و نقش کارشناس مالی در دسترس نیست.",
-                    "WORKFLOW_FINANCE_FALLBACK_UNAVAILABLE");
-            }
-
-            if (!instance.Tasks.Any(task =>
-                    task.Status == WorkflowTaskStatus.Pending
-                    && task.AssignedRoleId == financeRole.Id))
-            {
-                var fallbackTask = new WorkflowTask(
-                    instance.Id,
-                    current.Id,
-                    null,
-                    financeRole.Id,
-                    null,
-                    null,
-                    _currentUser.UserId,
-                    _clock.UtcNow);
-                fallbackTask.SetActionOverride("VerifyPayment", null);
-                instance.AddTask(fallbackTask);
-                await _unitOfWork.SaveChangesAsync(cancellationToken);
-            }
-
-            return Result.Success("تسک بررسی مالی به صورت جایگزین ایجاد شد.");
+            return await CreateFallbackTaskAsync(instance, current, cancellationToken);
         }
 
         var moved = await _mediator.Send(
@@ -116,8 +89,46 @@ public sealed class AdvanceToFinanceReviewCommandHandler
                 "ثبت فیش پرداخت و ارسال به بررسی مالی",
                 "{}"),
             cancellationToken);
-        return moved.IsFailure
-            ? Result.Failure(moved.Errors, moved.Message)
-            : Result.Success();
+        if (moved.IsFailure)
+        {
+            return await CreateFallbackTaskAsync(instance, current, cancellationToken);
+        }
+
+        return Result.Success();
+    }
+
+    private async Task<Result> CreateFallbackTaskAsync(
+        WorkflowInstance instance,
+        WorkflowState current,
+        CancellationToken cancellationToken)
+    {
+        var roles = await _roles.GetAllAsync(includePermissions: false, cancellationToken);
+        var financeRole = roles.FirstOrDefault(role => role.Name == "FinanceExpert");
+        if (financeRole is null)
+        {
+            return Result.Failure(
+                "گذار تایید مالی و نقش کارشناس مالی در دسترس نیست.",
+                "WORKFLOW_FINANCE_FALLBACK_UNAVAILABLE");
+        }
+
+        if (!instance.Tasks.Any(task =>
+                task.Status == WorkflowTaskStatus.Pending
+                && task.AssignedRoleId == financeRole.Id))
+        {
+            var fallbackTask = new WorkflowTask(
+                instance.Id,
+                current.Id,
+                null,
+                financeRole.Id,
+                null,
+                null,
+                _currentUser.UserId,
+                _clock.UtcNow);
+            fallbackTask.SetActionOverride("VerifyPayment", null);
+            instance.AddTask(fallbackTask);
+            await _unitOfWork.SaveChangesAsync(cancellationToken);
+        }
+
+        return Result.Success("تسک بررسی مالی به صورت جایگزین ایجاد شد.");
     }
 }
