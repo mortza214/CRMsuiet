@@ -76,7 +76,7 @@ public sealed class CreateManualPaymentCommandHandler
                     "PAYMENTS_INVOICE_CUSTOMER_MISMATCH");
             }
 
-            if (invoice.Status is not (InvoiceStatus.Issued or InvoiceStatus.PartiallyPaid))
+            if (invoice.Status is not (InvoiceStatus.Issued or InvoiceStatus.PartiallyPaid or InvoiceStatus.PendingPayment))
             {
                 return Result.Failure<TransactionDto>(
                     "فاکتور در وضعیت قابل پرداخت نیست.",
@@ -250,7 +250,7 @@ public sealed class InitiateOnlinePaymentCommandHandler
                 "PAYMENTS_INVOICE_FORBIDDEN");
         }
 
-        if (invoice.Status is not (InvoiceStatus.Issued or InvoiceStatus.PartiallyPaid))
+        if (invoice.Status is not (InvoiceStatus.Issued or InvoiceStatus.PartiallyPaid or InvoiceStatus.PendingPayment))
         {
             return Result.Failure<OnlinePaymentInitiationDto>(
                 "فاکتور در وضعیت قابل پرداخت نیست.",

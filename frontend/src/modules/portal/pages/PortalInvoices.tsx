@@ -164,7 +164,7 @@ export function PortalInvoices() {
               onClick={() => void handlePdf(record.id)}
               aria-label="دانلود PDF"
             />
-            {remaining > 0 && (
+            {remaining > 0 && record.status === "PendingPayment" && (
               <>
                 <Button
                   size="small"
@@ -184,6 +184,9 @@ export function PortalInvoices() {
                   پرداخت آنلاین
                 </Button>
               </>
+            )}
+            {remaining > 0 && record.status === "Draft" && (
+              <Typography.Text type="secondary">در انتظار تایید فروش</Typography.Text>
             )}
           </Space>
         );

@@ -100,6 +100,11 @@ public interface IWorkflowEntityCustomerResolver
         WorkflowEntityType entityType,
         Guid entityId,
         CancellationToken cancellationToken);
+
+    Task<Guid?> GetCustomerPortalUserIdAsync(
+        WorkflowEntityType entityType,
+        Guid entityId,
+        CancellationToken cancellationToken);
 }
 
 public interface IWorkflowEntityLinker

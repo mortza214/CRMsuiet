@@ -139,7 +139,11 @@ public sealed class StartWorkflowCommandHandler
             request.EntityType,
             request.EntityId,
             cancellationToken);
-        var assignment = _assignmentResolver.Resolve(startState, owner);
+        var customerUser = await _customerResolver.GetCustomerPortalUserIdAsync(
+            request.EntityType,
+            request.EntityId,
+            cancellationToken);
+        var assignment = _assignmentResolver.Resolve(startState, owner, customerUser);
 
         var instance = new WorkflowInstance(
             definition,
@@ -346,7 +350,11 @@ public sealed class ExecuteWorkflowTransitionCommandHandler
             instance.EntityType,
             instance.EntityId,
             cancellationToken);
-        var assignment = _assignmentResolver.Resolve(targetState, owner);
+        var customerUser = await _customerResolver.GetCustomerPortalUserIdAsync(
+            instance.EntityType,
+            instance.EntityId,
+            cancellationToken);
+        var assignment = _assignmentResolver.Resolve(targetState, owner, customerUser);
         var explicitAssignee = ReadExplicitAssignee(request.PayloadJson);
         if (explicitAssignee.HasValue)
         {

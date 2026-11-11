@@ -106,6 +106,31 @@ public sealed class WorkflowEntityCustomerResolver : IWorkflowEntityCustomerReso
             cancellationToken);
         return customer?.OwnerUserId;
     }
+    public async Task<Guid?> GetCustomerPortalUserIdAsync(
+        WorkflowEntityType entityType,
+        Guid entityId,
+        CancellationToken cancellationToken)
+    {
+        Guid? customerId = entityType switch
+        {
+            WorkflowEntityType.Customer => entityId,
+            WorkflowEntityType.Order => (await _orders.GetByIdWithDetailsAsync(entityId, cancellationToken))?.CustomerId,
+            WorkflowEntityType.Ticket => (await _tickets.GetByIdWithDetailsAsync(entityId, cancellationToken))?.CustomerId,
+            _ => null,
+        };
+
+        if (!customerId.HasValue)
+        {
+            return null;
+        }
+
+        var customer = await _customers.GetByIdAsync(
+            customerId.Value,
+            includeDetails: false,
+            cancellationToken);
+        return customer?.UserId;
+    }
+
 }
 
 public sealed class WorkflowEntityLinker : IWorkflowEntityLinker

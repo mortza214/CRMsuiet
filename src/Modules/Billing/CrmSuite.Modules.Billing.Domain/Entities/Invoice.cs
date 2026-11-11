@@ -140,6 +140,19 @@ public sealed class Invoice : BaseEntity
         MarkUpdated(userId, utcNow);
     }
 
+    public void MarkPendingPayment(Guid? userId, DateTime utcNow)
+    {
+        if (Status != InvoiceStatus.Draft)
+        {
+            throw new DomainException(
+                "فقط پیش‌نویس فاکتور قابل ارسال برای پرداخت است.",
+                "BILLING_INVOICE_NOT_DRAFT");
+        }
+
+        Status = InvoiceStatus.PendingPayment;
+        MarkUpdated(userId, utcNow);
+    }
+
     public void RegisterPayment(decimal amount, Guid? userId, DateTime utcNow)
     {
         if (Status is InvoiceStatus.Draft or InvoiceStatus.Canceled or InvoiceStatus.Paid)
@@ -180,6 +193,9 @@ public sealed class Invoice : BaseEntity
         {
             (InvoiceStatus.Draft, InvoiceStatus.Canceled) => true,
             (InvoiceStatus.Issued, InvoiceStatus.PartiallyPaid) => true,
+            (InvoiceStatus.PendingPayment, InvoiceStatus.PartiallyPaid) => true,
+            (InvoiceStatus.PendingPayment, InvoiceStatus.Paid) => true,
+            (InvoiceStatus.PendingPayment, InvoiceStatus.Canceled) => true,
             (InvoiceStatus.Issued, InvoiceStatus.Paid) => true,
             (InvoiceStatus.Issued, InvoiceStatus.Canceled) => true,
             (InvoiceStatus.PartiallyPaid, InvoiceStatus.Paid) => true,

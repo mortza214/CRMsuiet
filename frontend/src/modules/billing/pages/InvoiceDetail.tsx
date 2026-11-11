@@ -42,6 +42,7 @@ import { formatCurrency } from "@/shared/utils/format";
 const transitions: Record<InvoiceStatus, InvoiceStatus[]> = {
   Draft: ["Canceled"],
   Issued: ["PartiallyPaid", "Paid", "Canceled"],
+  PendingPayment: ["PartiallyPaid", "Paid", "Canceled"],
   PartiallyPaid: ["Paid", "Canceled"],
   Paid: [],
   Canceled: [],

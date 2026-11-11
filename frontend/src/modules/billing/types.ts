@@ -5,7 +5,8 @@ export type InvoiceStatus =
   | "Issued"
   | "PartiallyPaid"
   | "Paid"
-  | "Canceled";
+  | "Canceled"
+  | "PendingPayment";
 
 export interface InvoiceItem {
   id: string;

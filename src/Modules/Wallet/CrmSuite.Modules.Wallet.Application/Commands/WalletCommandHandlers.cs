@@ -184,7 +184,7 @@ public sealed class PayInvoiceFromWalletCommandHandler
             return Result.Failure<WalletDto>("فاکتور یافت نشد.", "WALLET_INVOICE_NOT_FOUND");
         }
 
-        if (invoice.Status is not (InvoiceStatus.Issued or InvoiceStatus.PartiallyPaid))
+        if (invoice.Status is not (InvoiceStatus.Issued or InvoiceStatus.PartiallyPaid or InvoiceStatus.PendingPayment))
         {
             return Result.Failure<WalletDto>("فاکتور در وضعیت قابل پرداخت نیست.", "WALLET_INVOICE_STATUS_INVALID");
         }

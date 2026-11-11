@@ -179,6 +179,7 @@ public sealed class WorkflowBillingActionSupport
         else
         {
             invoice.RecalculateDraftTotal();
+            invoice.MarkPendingPayment(_currentUser.UserId, now);
         }
 
         _invoices.Add(invoice);

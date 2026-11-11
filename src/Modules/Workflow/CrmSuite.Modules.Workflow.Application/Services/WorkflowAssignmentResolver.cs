@@ -14,7 +14,8 @@ public sealed class WorkflowAssignmentResolver
 {
     public WorkflowAssignment Resolve(
         WorkflowState state,
-        Guid? customerOwnerUserId)
+        Guid? customerOwnerUserId,
+        Guid? customerUserId = null)
     {
         return state.AssigneeType switch
         {
@@ -33,6 +34,10 @@ public sealed class WorkflowAssignmentResolver
                 ParseGuid(state.AssigneeValue, "دپارتمان")),
             WorkflowAssigneeType.CustomerOwner => new WorkflowAssignment(
                 customerOwnerUserId,
+                null,
+                null),
+            WorkflowAssigneeType.Customer => new WorkflowAssignment(
+                customerUserId,
                 null,
                 null),
             _ => throw new DomainException("نوع مسئول وضعیت معتبر نیست.", "WORKFLOW_ASSIGNEE_INVALID"),

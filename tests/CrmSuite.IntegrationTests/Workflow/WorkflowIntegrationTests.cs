@@ -430,6 +430,11 @@ public sealed class WorkflowIntegrationTests
             WorkflowEntityType entityType,
             Guid entityId,
             CancellationToken cancellationToken) => Task.FromResult<Guid?>(null);
+
+        public Task<Guid?> GetCustomerPortalUserIdAsync(
+            WorkflowEntityType entityType,
+            Guid entityId,
+            CancellationToken cancellationToken) => Task.FromResult<Guid?>(null);
     }
 
     private sealed class FakeLinker : IWorkflowEntityLinker
