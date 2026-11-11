@@ -63,6 +63,8 @@ public sealed class Invoice : BaseEntity
 
     public bool RequiresPayment { get; private set; } = true;
 
+    public string? ReceiptImageUrl { get; private set; }
+
     public ICollection<InvoiceItem> Items { get; private set; } = new List<InvoiceItem>();
 
     public void AddItem(InvoiceItem item)
@@ -89,6 +91,14 @@ public sealed class Invoice : BaseEntity
 
         SubTotal = Items.Sum(item => item.TotalPrice);
         TotalAmount = SubTotal - DiscountAmount + TaxAmount + InsuranceAmount;
+    }
+
+    public void SetReceiptImageUrl(string? receiptImageUrl, Guid? userId, DateTime utcNow)
+    {
+        ReceiptImageUrl = string.IsNullOrWhiteSpace(receiptImageUrl)
+            ? null
+            : receiptImageUrl.Trim();
+        MarkUpdated(userId, utcNow);
     }
 
     public void SetPaymentTerms(string? paymentMode, bool requiresPayment)

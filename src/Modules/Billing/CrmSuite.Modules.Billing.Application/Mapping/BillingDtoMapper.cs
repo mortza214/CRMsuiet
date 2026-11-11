@@ -51,7 +51,8 @@ public sealed class BillingDtoMapper
                     item.TotalPrice))
                 .ToArray(),
             createdAt,
-            _jalaliDate.ToJalali(createdAt));
+            _jalaliDate.ToJalali(createdAt),
+            invoice.ReceiptImageUrl);
     }
 
     public ContractDto ToContractDto(Contract contract, string? customerName)

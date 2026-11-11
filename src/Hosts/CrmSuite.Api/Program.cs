@@ -443,6 +443,7 @@ try
             });
     }
 
+    app.UseStaticFiles();
     app.MapControllers();
     app.MapHub<NotificationHub>("/hubs/notifications").RequireAuthorization();
     app.MapHealthChecks("/health", new HealthCheckOptions

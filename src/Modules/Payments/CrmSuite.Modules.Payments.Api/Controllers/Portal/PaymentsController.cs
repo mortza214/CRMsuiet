@@ -1,5 +1,7 @@
 using CrmSuite.BuildingBlocks.Application.Security;
 using CrmSuite.Modules.Foundation.Api.Extensions;
+using CrmSuite.Modules.Payments.Api.Contracts;
+using CrmSuite.Modules.Payments.Application.Commands;
 using CrmSuite.Modules.Payments.Application.Queries;
 using MediatR;
 using Microsoft.AspNetCore.Authorization;
@@ -17,6 +19,34 @@ public sealed class PaymentsController : ControllerBase
     public PaymentsController(IMediator mediator)
     {
         _mediator = mediator;
+    }
+
+    [HttpPost("manual")]
+    public async Task<IActionResult> CreateManual(
+        [FromBody] CreateManualPaymentRequest request,
+        CancellationToken cancellationToken)
+    {
+        var result = await _mediator.Send(
+            new CreateManualPaymentCommand(
+                request.InvoiceId,
+                request.CustomerId,
+                request.Amount,
+                request.PaymentMethod,
+                request.ReferenceNumber,
+                request.ReceiptImageUrl),
+            cancellationToken);
+        return this.ToApiResult(result, "فیش پرداخت ثبت شد و در انتظار تأیید مالی است.");
+    }
+
+    [HttpPost("saman/initiate")]
+    public async Task<IActionResult> InitiateOnline(
+        [FromBody] InitiateOnlinePaymentRequest request,
+        CancellationToken cancellationToken)
+    {
+        var result = await _mediator.Send(
+            new InitiateOnlinePaymentCommand(request.InvoiceId, request.CallbackUrl),
+            cancellationToken);
+        return this.ToApiResult(result, "لینک پرداخت ایجاد شد.");
     }
 
     [HttpGet("transactions")]

@@ -28,7 +28,8 @@ public sealed record InvoiceDto(
     string Status,
     IReadOnlyList<InvoiceItemDto> Items,
     DateTime CreatedAt,
-    string CreatedAtJalali);
+    string CreatedAtJalali,
+    string? ReceiptImageUrl = null);
 
 public sealed record InvoiceListItemDto(
     Guid Id,

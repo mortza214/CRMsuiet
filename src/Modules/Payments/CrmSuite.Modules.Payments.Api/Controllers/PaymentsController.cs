@@ -37,7 +37,8 @@ public sealed class PaymentsController : ControllerBase
                 request.CustomerId,
                 request.Amount,
                 request.PaymentMethod,
-                request.ReferenceNumber),
+                request.ReferenceNumber,
+                request.ReceiptImageUrl),
             cancellationToken);
 
         return this.ToApiResult(result, "پرداخت دستی ثبت شد و در انتظار تأیید مدیر مالی است.");

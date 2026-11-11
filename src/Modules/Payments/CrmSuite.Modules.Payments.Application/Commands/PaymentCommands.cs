@@ -10,7 +10,8 @@ public sealed record CreateManualPaymentCommand(
     Guid CustomerId,
     decimal Amount,
     PaymentMethod PaymentMethod,
-    string? ReferenceNumber) : IRequest<Result<TransactionDto>>;
+    string? ReferenceNumber,
+    string? ReceiptImageUrl = null) : IRequest<Result<TransactionDto>>;
 
 public sealed record ApproveManualPaymentCommand(Guid TransactionId) : IRequest<Result<TransactionDto>>;
 

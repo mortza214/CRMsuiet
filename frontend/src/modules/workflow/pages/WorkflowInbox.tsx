@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState } from "react";
 import {
   ApartmentOutlined,
   EyeOutlined,
+  UploadOutlined,
   PlayCircleOutlined,
 } from "@ant-design/icons";
 import {
@@ -20,15 +21,16 @@ import {
   Table,
   Tag,
   Typography,
+  Upload,
   type TableColumnsType,
 } from "antd";
 import { useNavigate } from "react-router-dom";
 import { useAuthStore } from "@/modules/auth/store";
 import { useFormSubmissions, useFormTemplateByCode } from "@/modules/forms/hooks/useForms";
 import { useServiceRequestDetail } from "@/modules/orders/hooks/useOrders";
-import { useInvoices } from "@/modules/billing/hooks/useInvoices";
-import { useCreateManualPayment, useInitiateSamanPayment } from "@/modules/payments/hooks/usePayments";
-import { formatCurrency } from "@/shared/utils/format";
+import { useInvoiceDetails, useInvoices } from "@/modules/billing/hooks/useInvoices";
+import { useCreateManualPayment, useInitiateSamanPayment, useUploadReceipt } from "@/modules/payments/hooks/usePayments";
+import { formatCurrency, resolveApiFileUrl } from "@/shared/utils/format";
 import { useDepartments } from "@/modules/tickets/hooks/useTickets";
 import { useDepartments as useSettingsDepartments } from "@/modules/settings/hooks/useSettings";
 import { WorkflowFormRenderer } from "../components/WorkflowFormRenderer";
@@ -74,7 +76,8 @@ export function WorkflowInbox() {
   const [actionData, setActionData] = useState<Record<string, unknown>>({});
   const [reviewEditable, setReviewEditable] = useState(false);
   const [manualPaymentOpen, setManualPaymentOpen] = useState(false);
-  const [manualPaymentForm] = Form.useForm<{ referenceNumber: string }>();
+  const [receiptImageUrl, setReceiptImageUrl] = useState<string | null>(null);
+  const [manualPaymentForm] = Form.useForm<{ referenceNumber: string; amount: number }>();
   const [actionForm] = Form.useForm<ActionForm>();
   const tasks = useMyWorkflowTasks(status, departmentId);
   const departments = useDepartments(canReadDepartments);
@@ -141,8 +144,10 @@ export function WorkflowInbox() {
   const currentInvoice = invoices.data?.items.find(
     (invoice) => invoice.orderId === selectedTask?.entityId,
   );
+  const currentInvoiceDetails = useInvoiceDetails(currentInvoice?.id);
   const initiateOnline = useInitiateSamanPayment();
   const createManualPayment = useCreateManualPayment();
+  const uploadReceipt = useUploadReceipt();
   const execute = useExecuteWorkflowAction(selectedTask?.instanceId);
 
   const openAction = (task: WorkflowTask) => {
@@ -208,15 +213,20 @@ export function WorkflowInbox() {
     }
   };
 
-  const handleManualPayment = async (values: { referenceNumber: string }) => {
+  const handleManualPayment = async (values: { referenceNumber: string; amount: number }) => {
     if (!currentInvoice || !requestDetail.data) return;
+    if (!receiptImageUrl) {
+      message.warning("تصویر یا PDF فیش را آپلود کنید.");
+      return;
+    }
     try {
       await createManualPayment.mutateAsync({
         invoiceId: currentInvoice.id,
         customerId: requestDetail.data.customerId,
-        amount: currentInvoice.totalAmount,
+        amount: values.amount,
         paymentMethod: "ManualTransfer",
         referenceNumber: values.referenceNumber.trim(),
+        receiptImageUrl,
       });
       message.success("فیش پرداخت ثبت شد و در انتظار تأیید مالی است.");
       setManualPaymentOpen(false);
@@ -546,6 +556,24 @@ export function WorkflowInbox() {
           )}
 
           {selectedTaskAction?.actionKey === "VerifyPayment" && (
+            <>
+              {currentInvoiceDetails.data?.receiptImageUrl && (
+                <Alert
+                  type="info"
+                  showIcon
+                  style={{ marginBottom: 12 }}
+                  message="فیش پرداخت آپلودشده"
+                  action={
+                    <Button
+                      size="small"
+                      href={resolveApiFileUrl(currentInvoiceDetails.data?.receiptImageUrl)}
+                      target="_blank"
+                    >
+                      مشاهده فیش
+                    </Button>
+                  }
+                />
+              )}
             <Form.Item label="تأیید مالی">
               <Checkbox
                 checked={Boolean(actionData.approved)}
@@ -556,6 +584,7 @@ export function WorkflowInbox() {
                 فیش پرداخت تأیید شد
               </Checkbox>
             </Form.Item>
+            </>
           )}
 
           {selectedTaskAction?.actionKey === "SignContract" && (
@@ -636,7 +665,11 @@ export function WorkflowInbox() {
                     </Button>
                     <Button
                       disabled={currentInvoice.status === "Paid"}
-                      onClick={() => setManualPaymentOpen(true)}
+                      onClick={() => {
+                        setReceiptImageUrl(null);
+                        manualPaymentForm.setFieldsValue({ amount: currentInvoice.totalAmount });
+                        setManualPaymentOpen(true);
+                      }}
                     >
                       ثبت فیش / واریز
                     </Button>
@@ -720,9 +753,39 @@ export function WorkflowInbox() {
           >
             <Input dir="ltr" />
           </Form.Item>
-          <Typography.Text type="secondary">
-            مبلغ فیش: {currentInvoice ? formatCurrency(currentInvoice.totalAmount) : "-"}
-          </Typography.Text>
+          <Form.Item
+            name="amount"
+            label="مبلغ فیش"
+            rules={[{ required: true, message: "مبلغ فیش را وارد کنید." }]}
+          >
+            <InputNumber style={{ width: "100%" }} min={1} />
+          </Form.Item>
+          <Form.Item label="تصویر فیش (JPG / PNG / PDF)" required>
+            <Upload
+              accept=".jpg,.jpeg,.png,.pdf"
+              maxCount={1}
+              showUploadList={false}
+              customRequest={async ({ file, onSuccess, onError }) => {
+                try {
+                  const url = await uploadReceipt.mutateAsync(file as File);
+                  setReceiptImageUrl(url);
+                  onSuccess?.(url);
+                } catch (error) {
+                  onError?.(error as Error);
+                  message.error("آپلود فیش انجام نشد.");
+                }
+              }}
+            >
+              <Button icon={<UploadOutlined />} loading={uploadReceipt.isPending}>
+                انتخاب و آپلود فیش
+              </Button>
+            </Upload>
+            {receiptImageUrl && (
+              <Typography.Link href={resolveApiFileUrl(receiptImageUrl)} target="_blank" style={{ display: "block", marginTop: 8 }}>
+                مشاهده فایل آپلودشده
+              </Typography.Link>
+            )}
+          </Form.Item>
         </Form>
       </Modal>
     </Space>

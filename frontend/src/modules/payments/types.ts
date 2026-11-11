@@ -36,6 +36,7 @@ export interface ManualPaymentPayload {
   amount: number;
   paymentMethod: PaymentMethod;
   referenceNumber?: string | null;
+  receiptImageUrl?: string | null;
 }
 
 export interface WalletBalance {

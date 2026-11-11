@@ -40,6 +40,7 @@ export interface InvoiceDetail extends InvoiceListItem {
   items: InvoiceItem[];
   createdAt: string;
   createdAtJalali: string;
+  receiptImageUrl?: string | null;
 }
 
 export interface InvoiceListParams {

@@ -135,11 +135,24 @@ public sealed class VerifyPaymentAction : IWorkflowAction
             string.IsNullOrWhiteSpace(context.ActionDataJson) ? "{}" : context.ActionDataJson);
         var approved = document.RootElement.TryGetProperty("approved", out var value)
                        && value.ValueKind == JsonValueKind.True;
-        return approved
-            ? Task.FromResult(Result.Success())
-            : Task.FromResult(Result.Failure(
-                "تأیید مالی پرداخت الزامی است.",
-                "WORKFLOW_FINANCE_PAYMENT_NOT_APPROVED"));
+        if (approved)
+        {
+            return Task.FromResult(Result.Success());
+        }
+
+        var transition = context.Definition.Transitions.FirstOrDefault(
+            item => item.Id == context.TransitionId);
+        var target = transition is null
+            ? null
+            : context.Definition.FindState(transition.ToStateId);
+        if (target?.Code == "CANCELLED")
+        {
+            return Task.FromResult(Result.Success());
+        }
+
+        return Task.FromResult(Result.Failure(
+            "تأیید مالی پرداخت الزامی است.",
+            "WORKFLOW_FINANCE_PAYMENT_NOT_APPROVED"));
     }
 }
 

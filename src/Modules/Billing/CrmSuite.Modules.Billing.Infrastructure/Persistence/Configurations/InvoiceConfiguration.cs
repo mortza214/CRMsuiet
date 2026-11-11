@@ -84,6 +84,10 @@ public sealed class InvoiceConfiguration : BaseEntityConfiguration<Invoice>
             .HasColumnName("requires_payment")
             .IsRequired();
 
+        builder.Property(invoice => invoice.ReceiptImageUrl)
+            .HasColumnName("receipt_image_url")
+            .HasMaxLength(500);
+
         builder.HasIndex(invoice => new { invoice.OrderId, invoice.Type })
             .HasDatabaseName("ix_invoices_order_type");
 

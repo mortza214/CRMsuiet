@@ -52,6 +52,21 @@ export function useCreateManualPayment() {
   });
 }
 
+export function useUploadReceipt() {
+  return useMutation({
+    mutationFn: async (file: File) => {
+      const formData = new FormData();
+      formData.append("file", file);
+      const response = await api.post<ApiEnvelope<{ fileUrl: string }>>(
+        "/files/upload",
+        formData,
+        { headers: { "Content-Type": "multipart/form-data" } },
+      );
+      return response.data.data?.fileUrl ?? "";
+    },
+  });
+}
+
 export function useApproveManualPayment() {
   const queryClient = useQueryClient();
 

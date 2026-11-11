@@ -44,6 +44,7 @@ import { PortalTicketDetail } from "@/modules/portal/pages/PortalTicketDetail";
 import { PortalWallet } from "@/modules/portal/pages/PortalWallet";
 import { PortalProfile } from "@/modules/portal/pages/PortalProfile";
 import { PortalServices } from "@/modules/portal/pages/PortalServices";
+import { PortalRequests } from "@/modules/portal/pages/PortalRequests";
 
 const router = createBrowserRouter([
   {
@@ -69,6 +70,7 @@ const router = createBrowserRouter([
           { path: "dashboard", element: <PortalDashboard /> },
           { path: "orders", element: <PortalOrders /> },
           { path: "services", element: <PortalServices /> },
+          { path: "requests", element: <PortalRequests /> },
           { path: "invoices", element: <PortalInvoices /> },
           { path: "tickets", element: <PortalTickets /> },
           { path: "tickets/:id", element: <PortalTicketDetail /> },

@@ -29,6 +29,11 @@ const menuItems: MenuProps["items"] = [
     label: "سرویس‌های من",
   },
   {
+    key: "/portal/requests",
+    icon: <FileTextOutlined />,
+    label: "درخواست‌های در انتظار من",
+  },
+  {
     key: "/portal/invoices",
     icon: <FileTextOutlined />,
     label: "فاکتورهای من",

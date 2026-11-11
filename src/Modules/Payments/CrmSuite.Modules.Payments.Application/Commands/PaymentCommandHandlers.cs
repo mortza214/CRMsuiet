@@ -91,6 +91,10 @@ public sealed class CreateManualPaymentCommandHandler
             }
 
             invoiceNumber = invoice.InvoiceNumber;
+            if (!string.IsNullOrWhiteSpace(request.ReceiptImageUrl))
+            {
+                invoice.SetReceiptImageUrl(request.ReceiptImageUrl, _currentUser.UserId, now);
+            }
         }
 
         var transaction = new Transaction(

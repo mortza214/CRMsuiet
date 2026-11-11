@@ -172,6 +172,11 @@ namespace CrmSuite.BuildingBlocks.Infrastructure.Persistence.Migrations
                         .HasColumnType("varchar(30)")
                         .HasColumnName("payment_mode");
 
+                    b.Property<string>("ReceiptImageUrl")
+                        .HasMaxLength(500)
+                        .HasColumnType("varchar(500)")
+                        .HasColumnName("receipt_image_url");
+
                     b.Property<bool>("RequiresPayment")
                         .HasColumnType("tinyint(1)")
                         .HasColumnName("requires_payment");

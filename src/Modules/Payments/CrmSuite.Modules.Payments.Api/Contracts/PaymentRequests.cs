@@ -13,6 +13,8 @@ public sealed class CreateManualPaymentRequest
     public PaymentMethod PaymentMethod { get; init; }
 
     public string? ReferenceNumber { get; init; }
+
+    public string? ReceiptImageUrl { get; init; }
 }
 
 public sealed class InitiateOnlinePaymentRequest

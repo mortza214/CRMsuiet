@@ -139,6 +139,7 @@ public sealed class WorkflowSeedService
         AddTransition(definition, finalPayment, financeReview, "تایید پرداخت", 17);
         AddTransition(definition, financeReview, contract, "نیاز به قرارداد", 18);
         AddTransition(definition, financeReview, completed, "بدون قرارداد", 19);
+        AddTransition(definition, financeReview, cancelled, "رد پرداخت", 21);
         AddTransition(definition, contract, completed, "امضای قرارداد", 20);
 
         return definition;
