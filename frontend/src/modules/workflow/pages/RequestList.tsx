@@ -51,6 +51,12 @@ export function RequestList() {
       render: (value: string | null) => value || "-",
     },
     {
+      title: "مسئول فعلی",
+      dataIndex: "currentAssigneeName",
+      width: 160,
+      render: (value: string | null) => value || "—",
+    },
+    {
       title: "وضعیت",
       dataIndex: "workflowStatus",
       width: 120,

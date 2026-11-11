@@ -366,6 +366,12 @@ public sealed class SubmitFormCommandHandler
                 cancellationToken);
             if (existing is not null)
             {
+                _submissions.AddHistory(new FormSubmissionHistory(
+                    existing.Id,
+                    "Updated",
+                    _currentUser.UserId.Value,
+                    _clock.UtcNow,
+                    existing.SubmittedDataJson));
                 existing.UpdateData(
                     request.SubmittedDataJson,
                     _currentUser.UserId.Value,

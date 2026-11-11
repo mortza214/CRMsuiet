@@ -1518,6 +1518,72 @@ namespace CrmSuite.BuildingBlocks.Infrastructure.Persistence.Migrations
                     b.ToTable("form_submissions", (string)null);
                 });
 
+            modelBuilder.Entity("CrmSuite.Modules.Forms.Domain.Entities.FormSubmissionHistory", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .HasColumnType("char(36)")
+                        .HasColumnName("id");
+
+                    b.Property<string>("Action")
+                        .IsRequired()
+                        .HasMaxLength(30)
+                        .HasColumnType("varchar(30)")
+                        .HasColumnName("action");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime(6)")
+                        .HasColumnName("created_at");
+
+                    b.Property<Guid?>("CreatedByUserId")
+                        .HasColumnType("char(36)")
+                        .HasColumnName("created_by_user_id");
+
+                    b.Property<DateTime?>("DeletedAt")
+                        .HasColumnType("datetime(6)")
+                        .HasColumnName("deleted_at");
+
+                    b.Property<Guid?>("DeletedByUserId")
+                        .HasColumnType("char(36)")
+                        .HasColumnName("deleted_by_user_id");
+
+                    b.Property<Guid>("FormSubmissionId")
+                        .HasColumnType("char(36)")
+                        .HasColumnName("form_submission_id");
+
+                    b.Property<bool>("IsDeleted")
+                        .HasColumnType("tinyint(1)")
+                        .HasColumnName("is_deleted");
+
+                    b.Property<DateTime>("ModifiedAt")
+                        .HasColumnType("datetime(6)")
+                        .HasColumnName("modified_at");
+
+                    b.Property<Guid>("ModifiedBy")
+                        .HasColumnType("char(36)")
+                        .HasColumnName("modified_by");
+
+                    b.Property<string>("PreviousDataJson")
+                        .HasColumnType("longtext")
+                        .HasColumnName("previous_data_json");
+
+                    b.Property<DateTime?>("UpdatedAt")
+                        .HasColumnType("datetime(6)")
+                        .HasColumnName("updated_at");
+
+                    b.Property<Guid?>("UpdatedByUserId")
+                        .HasColumnType("char(36)")
+                        .HasColumnName("updated_by_user_id");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("FormSubmissionId")
+                        .HasDatabaseName("ix_form_submission_history_submission");
+
+                    b.HasIndex("IsDeleted");
+
+                    b.ToTable("form_submission_history", (string)null);
+                });
+
             modelBuilder.Entity("CrmSuite.Modules.Forms.Domain.Entities.FormSubmissionItem", b =>
                 {
                     b.Property<Guid>("Id")

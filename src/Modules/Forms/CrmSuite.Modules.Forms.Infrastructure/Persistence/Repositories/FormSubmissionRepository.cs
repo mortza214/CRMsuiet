@@ -46,4 +46,7 @@ public sealed class FormSubmissionRepository : IFormSubmissionRepository
                 cancellationToken);
 
     public void Add(FormSubmission submission) => _dbContext.Set<FormSubmission>().Add(submission);
+
+    public void AddHistory(FormSubmissionHistory history) =>
+        _dbContext.Set<FormSubmissionHistory>().Add(history);
 }

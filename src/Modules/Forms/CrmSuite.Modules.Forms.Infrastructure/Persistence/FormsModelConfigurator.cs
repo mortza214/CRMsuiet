@@ -12,5 +12,6 @@ public sealed class FormsModelConfigurator : IModuleModelConfigurator
         modelBuilder.ApplyConfiguration(new FormFieldConfiguration());
         modelBuilder.ApplyConfiguration(new FormSubmissionConfiguration());
         modelBuilder.ApplyConfiguration(new FormSubmissionItemConfiguration());
+        modelBuilder.ApplyConfiguration(new FormSubmissionHistoryConfiguration());
     }
 }

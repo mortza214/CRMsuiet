@@ -35,6 +35,8 @@ public interface IFormSubmissionRepository
         CancellationToken cancellationToken);
 
     void Add(FormSubmission submission);
+
+    void AddHistory(FormSubmissionHistory history);
 }
 
 public interface IFormUnitOfWork

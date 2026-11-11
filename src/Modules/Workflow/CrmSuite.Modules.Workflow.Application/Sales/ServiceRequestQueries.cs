@@ -1,3 +1,4 @@
+using CrmSuite.Modules.Identity.Application.Abstractions;
 using CrmSuite.BuildingBlocks.Domain.Results;
 using CrmSuite.Modules.Customers.Application.Abstractions;
 using CrmSuite.Modules.Foundation.Application.Abstractions;
@@ -29,7 +30,8 @@ public sealed record ServiceRequestSummaryDto(
     string? WorkflowStateCode,
     string? WorkflowStateName,
     string? WorkflowStatus,
-    Guid? SalesExpertId = null);
+    Guid? SalesExpertId = null,
+    string? CurrentAssigneeName = null);
 
 public sealed record ServiceRequestDetailDto(
     Guid OrderId,
@@ -387,19 +389,28 @@ public sealed class GetRecentServiceRequestsQueryHandler
     private readonly IWorkflowInstanceRepository _instances;
     private readonly IWorkflowDefinitionRepository _definitions;
     private readonly IJalaliDateService _jalali;
+    private readonly IUserRepository _users;
+    private readonly IRoleRepository _roles;
+    private readonly IDepartmentRepository _departments;
 
     public GetRecentServiceRequestsQueryHandler(
         IOrderReadRepository readRepository,
         IOrderRepository orders,
         IWorkflowInstanceRepository instances,
         IWorkflowDefinitionRepository definitions,
-        IJalaliDateService jalali)
+        IJalaliDateService jalali,
+        IUserRepository users,
+        IRoleRepository roles,
+        IDepartmentRepository departments)
     {
         _readRepository = readRepository;
         _orders = orders;
         _instances = instances;
         _definitions = definitions;
         _jalali = jalali;
+        _users = users;
+        _roles = roles;
+        _departments = departments;
     }
 
     public async Task<Result<IReadOnlyList<ServiceRequestSummaryDto>>> Handle(
@@ -447,9 +458,41 @@ public sealed class GetRecentServiceRequestsQueryHandler
                 ServiceRequestQuerySupport.StateCode(workflow.Item1, workflow.Item2),
                 ServiceRequestQuerySupport.StateName(workflow.Item1, workflow.Item2),
                 workflow.Item1?.Status.ToString(),
-                order.SalesExpertId));
+                order.SalesExpertId,
+                await ResolveAssigneeNameAsync(workflow.Item1, cancellationToken)));
         }
 
         return Result.Success<IReadOnlyList<ServiceRequestSummaryDto>>(result);
+    }
+
+    private async Task<string?> ResolveAssigneeNameAsync(
+        WorkflowInstance? instance,
+        CancellationToken cancellationToken)
+    {
+        var task = instance?.Tasks
+            .Where(item => item.Status == WorkflowTaskStatus.Pending)
+            .OrderByDescending(item => item.CreatedAt)
+            .FirstOrDefault();
+        if (task is null)
+        {
+            return null;
+        }
+
+        if (task.AssignedUserId.HasValue)
+        {
+            return (await _users.GetByIdAsync(task.AssignedUserId.Value, cancellationToken))?.FullName;
+        }
+
+        if (task.AssignedRoleId.HasValue)
+        {
+            return (await _roles.GetByIdWithPermissionsAsync(task.AssignedRoleId.Value, cancellationToken))?.DisplayName;
+        }
+
+        if (task.AssignedDepartmentId.HasValue)
+        {
+            return (await _departments.GetByIdAsync(task.AssignedDepartmentId.Value, cancellationToken))?.Name;
+        }
+
+        return "بدون مسئول";
     }
 }
