@@ -1,0 +1,10 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <Description>Foundation module infrastructure layer (EF Core mappings, repositories, external adapters).</Description>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\CrmSuite.Modules.Foundation.Application\CrmSuite.Modules.Foundation.Application.csproj" />
+    <ProjectReference Include="..\..\..\BuildingBlocks\CrmSuite.BuildingBlocks.Infrastructure\CrmSuite.BuildingBlocks.Infrastructure.csproj" />
+  </ItemGroup>
+</Project>

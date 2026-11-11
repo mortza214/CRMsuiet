@@ -1,0 +1,10 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <Description>Reports module application layer (commands, queries, DTOs, validators).</Description>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\CrmSuite.Modules.Reports.Domain\CrmSuite.Modules.Reports.Domain.csproj" />
+    <ProjectReference Include="..\..\..\BuildingBlocks\CrmSuite.BuildingBlocks.Application\CrmSuite.BuildingBlocks.Application.csproj" />
+  </ItemGroup>
+</Project>

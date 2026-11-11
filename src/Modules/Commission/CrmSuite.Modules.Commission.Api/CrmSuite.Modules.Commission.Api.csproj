@@ -1,0 +1,14 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <Description>Commission module HTTP endpoints.</Description>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <FrameworkReference Include="Microsoft.AspNetCore.App" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\CrmSuite.Modules.Commission.Application\CrmSuite.Modules.Commission.Application.csproj" />
+    <ProjectReference Include="..\CrmSuite.Modules.Commission.Infrastructure\CrmSuite.Modules.Commission.Infrastructure.csproj" />
+  </ItemGroup>
+</Project>

@@ -1,0 +1,17 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <Description>Billing module infrastructure layer (EF Core mappings, repositories, external adapters).</Description>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\CrmSuite.Modules.Billing.Application\CrmSuite.Modules.Billing.Application.csproj" />
+    <ProjectReference Include="..\..\..\BuildingBlocks\CrmSuite.BuildingBlocks.Infrastructure\CrmSuite.BuildingBlocks.Infrastructure.csproj" />
+    <ProjectReference Include="..\..\Foundation\CrmSuite.Modules.Foundation.Infrastructure\CrmSuite.Modules.Foundation.Infrastructure.csproj" />
+    <ProjectReference Include="..\..\Orders\CrmSuite.Modules.Orders.Application\CrmSuite.Modules.Orders.Application.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Dapper" />
+    <PackageReference Include="QuestPDF" />
+  </ItemGroup>
+</Project>

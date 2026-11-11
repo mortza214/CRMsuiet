@@ -1,0 +1,12 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <Description>Catalog module application layer (commands, queries, DTOs, validators).</Description>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\CrmSuite.Modules.Catalog.Domain\CrmSuite.Modules.Catalog.Domain.csproj" />
+    <ProjectReference Include="..\..\..\BuildingBlocks\CrmSuite.BuildingBlocks.Application\CrmSuite.BuildingBlocks.Application.csproj" />
+    <ProjectReference Include="..\..\Foundation\CrmSuite.Modules.Foundation.Application\CrmSuite.Modules.Foundation.Application.csproj" />
+    <ProjectReference Include="..\..\Forms\CrmSuite.Modules.Forms.Application\CrmSuite.Modules.Forms.Application.csproj" />
+  </ItemGroup>
+</Project>

@@ -1,0 +1,11 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <Description>Forms module infrastructure layer (EF Core mappings, repositories, external adapters).</Description>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\CrmSuite.Modules.Forms.Application\CrmSuite.Modules.Forms.Application.csproj" />
+    <ProjectReference Include="..\..\..\BuildingBlocks\CrmSuite.BuildingBlocks.Infrastructure\CrmSuite.BuildingBlocks.Infrastructure.csproj" />
+    <ProjectReference Include="..\..\Foundation\CrmSuite.Modules.Foundation.Infrastructure\CrmSuite.Modules.Foundation.Infrastructure.csproj" />
+  </ItemGroup>
+</Project>

@@ -1,0 +1,26 @@
+namespace CrmSuite.Modules.Customers.Application.Dtos;
+
+public sealed record CustomerDto(
+    Guid Id,
+    string Type,
+    string? FirstName,
+    string? LastName,
+    string? CompanyName,
+    string DisplayName,
+    string? EconomicCode,
+    string NationalId,
+    string Mobile,
+    string? Phone,
+    string? Email,
+    string? Address,
+    Guid? OwnerUserId,
+    Guid? ParentCustomerId,
+    bool IsReseller,
+    CustomerGroupDto? Group,
+    IReadOnlyList<CustomerTagSummaryDto> Tags,
+    Guid? UserId,
+    DateTime CreatedAt,
+    string CreatedAtJalali,
+    DateTime? UpdatedAt,
+    string? UpdatedAtJalali,
+    string OwnerType = "CurrentUser");

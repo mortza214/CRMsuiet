@@ -1,0 +1,14 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <Description>Tickets module application layer (commands, queries, DTOs, validators).</Description>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\CrmSuite.Modules.Tickets.Domain\CrmSuite.Modules.Tickets.Domain.csproj" />
+    <ProjectReference Include="..\..\..\BuildingBlocks\CrmSuite.BuildingBlocks.Application\CrmSuite.BuildingBlocks.Application.csproj" />
+    <ProjectReference Include="..\..\Foundation\CrmSuite.Modules.Foundation.Application\CrmSuite.Modules.Foundation.Application.csproj" />
+    <ProjectReference Include="..\..\Identity\CrmSuite.Modules.Identity.Application\CrmSuite.Modules.Identity.Application.csproj" />
+    <ProjectReference Include="..\..\Customers\CrmSuite.Modules.Customers.Application\CrmSuite.Modules.Customers.Application.csproj" />
+    <ProjectReference Include="..\..\Catalog\CrmSuite.Modules.Catalog.Application\CrmSuite.Modules.Catalog.Application.csproj" />
+  </ItemGroup>
+</Project>

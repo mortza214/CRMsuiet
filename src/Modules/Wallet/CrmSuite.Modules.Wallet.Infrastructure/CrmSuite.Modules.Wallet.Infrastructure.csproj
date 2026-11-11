@@ -1,0 +1,15 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <Description>Wallet module infrastructure layer (EF Core mappings, repositories, external adapters).</Description>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\CrmSuite.Modules.Wallet.Application\CrmSuite.Modules.Wallet.Application.csproj" />
+    <ProjectReference Include="..\..\..\BuildingBlocks\CrmSuite.BuildingBlocks.Infrastructure\CrmSuite.BuildingBlocks.Infrastructure.csproj" />
+    <ProjectReference Include="..\..\Foundation\CrmSuite.Modules.Foundation.Infrastructure\CrmSuite.Modules.Foundation.Infrastructure.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Dapper" />
+  </ItemGroup>
+</Project>

@@ -1,0 +1,12 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <Description>Settings module application layer (commands, queries, DTOs, validators).</Description>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\CrmSuite.Modules.Settings.Domain\CrmSuite.Modules.Settings.Domain.csproj" />
+    <ProjectReference Include="..\..\..\BuildingBlocks\CrmSuite.BuildingBlocks.Application\CrmSuite.BuildingBlocks.Application.csproj" />
+    <ProjectReference Include="..\..\Foundation\CrmSuite.Modules.Foundation.Application\CrmSuite.Modules.Foundation.Application.csproj" />
+    <ProjectReference Include="..\..\Notifications\CrmSuite.Modules.Notifications.Application\CrmSuite.Modules.Notifications.Application.csproj" />
+  </ItemGroup>
+</Project>

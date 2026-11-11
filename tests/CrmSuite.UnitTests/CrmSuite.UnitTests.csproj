@@ -1,0 +1,74 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <IsPackable>false</IsPackable>
+    <IsTestProject>true</IsTestProject>
+    <Description>Unit tests for shared primitives and authorization metadata.</Description>
+    <NoWarn>$(NoWarn);CA1707</NoWarn>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\src\BuildingBlocks\CrmSuite.BuildingBlocks.Application\CrmSuite.BuildingBlocks.Application.csproj" />
+    <ProjectReference Include="..\..\src\BuildingBlocks\CrmSuite.BuildingBlocks.Domain\CrmSuite.BuildingBlocks.Domain.csproj" />
+    <ProjectReference Include="..\..\src\Modules\Foundation\CrmSuite.Modules.Foundation.Application\CrmSuite.Modules.Foundation.Application.csproj" />
+    <ProjectReference Include="..\..\src\Modules\Foundation\CrmSuite.Modules.Foundation.Domain\CrmSuite.Modules.Foundation.Domain.csproj" />
+    <ProjectReference Include="..\..\src\Modules\Foundation\CrmSuite.Modules.Foundation.Infrastructure\CrmSuite.Modules.Foundation.Infrastructure.csproj" />
+    <ProjectReference Include="..\..\src\Modules\Identity\CrmSuite.Modules.Identity.Api\CrmSuite.Modules.Identity.Api.csproj" />
+    <ProjectReference Include="..\..\src\Modules\Identity\CrmSuite.Modules.Identity.Application\CrmSuite.Modules.Identity.Application.csproj" />
+    <ProjectReference Include="..\..\src\Modules\Identity\CrmSuite.Modules.Identity.Domain\CrmSuite.Modules.Identity.Domain.csproj" />
+    <ProjectReference Include="..\..\src\Modules\Identity\CrmSuite.Modules.Identity.Infrastructure\CrmSuite.Modules.Identity.Infrastructure.csproj" />
+    <ProjectReference Include="..\..\src\Modules\Customers\CrmSuite.Modules.Customers.Application\CrmSuite.Modules.Customers.Application.csproj" />
+    <ProjectReference Include="..\..\src\Modules\Customers\CrmSuite.Modules.Customers.Domain\CrmSuite.Modules.Customers.Domain.csproj" />
+    <ProjectReference Include="..\..\src\Modules\Customers\CrmSuite.Modules.Customers.Infrastructure\CrmSuite.Modules.Customers.Infrastructure.csproj" />
+    <ProjectReference Include="..\..\src\Modules\Catalog\CrmSuite.Modules.Catalog.Application\CrmSuite.Modules.Catalog.Application.csproj" />
+    <ProjectReference Include="..\..\src\Modules\Catalog\CrmSuite.Modules.Catalog.Domain\CrmSuite.Modules.Catalog.Domain.csproj" />
+    <ProjectReference Include="..\..\src\Modules\Catalog\CrmSuite.Modules.Catalog.Infrastructure\CrmSuite.Modules.Catalog.Infrastructure.csproj" />
+    <ProjectReference Include="..\..\src\Modules\Orders\CrmSuite.Modules.Orders.Application\CrmSuite.Modules.Orders.Application.csproj" />
+    <ProjectReference Include="..\..\src\Modules\Orders\CrmSuite.Modules.Orders.Domain\CrmSuite.Modules.Orders.Domain.csproj" />
+    <ProjectReference Include="..\..\src\Modules\Orders\CrmSuite.Modules.Orders.Infrastructure\CrmSuite.Modules.Orders.Infrastructure.csproj" />
+    <ProjectReference Include="..\..\src\Modules\Billing\CrmSuite.Modules.Billing.Application\CrmSuite.Modules.Billing.Application.csproj" />
+    <ProjectReference Include="..\..\src\Modules\Billing\CrmSuite.Modules.Billing.Domain\CrmSuite.Modules.Billing.Domain.csproj" />
+    <ProjectReference Include="..\..\src\Modules\Billing\CrmSuite.Modules.Billing.Infrastructure\CrmSuite.Modules.Billing.Infrastructure.csproj" />
+    <ProjectReference Include="..\..\src\Modules\Payments\CrmSuite.Modules.Payments.Application\CrmSuite.Modules.Payments.Application.csproj" />
+    <ProjectReference Include="..\..\src\Modules\Payments\CrmSuite.Modules.Payments.Domain\CrmSuite.Modules.Payments.Domain.csproj" />
+    <ProjectReference Include="..\..\src\Modules\Payments\CrmSuite.Modules.Payments.Infrastructure\CrmSuite.Modules.Payments.Infrastructure.csproj" />
+    <ProjectReference Include="..\..\src\Modules\Wallet\CrmSuite.Modules.Wallet.Application\CrmSuite.Modules.Wallet.Application.csproj" />
+    <ProjectReference Include="..\..\src\Modules\Wallet\CrmSuite.Modules.Wallet.Domain\CrmSuite.Modules.Wallet.Domain.csproj" />
+    <ProjectReference Include="..\..\src\Modules\Wallet\CrmSuite.Modules.Wallet.Infrastructure\CrmSuite.Modules.Wallet.Infrastructure.csproj" />
+    <ProjectReference Include="..\..\src\Modules\Tickets\CrmSuite.Modules.Tickets.Application\CrmSuite.Modules.Tickets.Application.csproj" />
+    <ProjectReference Include="..\..\src\Modules\Tickets\CrmSuite.Modules.Tickets.Domain\CrmSuite.Modules.Tickets.Domain.csproj" />
+    <ProjectReference Include="..\..\src\Modules\Tickets\CrmSuite.Modules.Tickets.Infrastructure\CrmSuite.Modules.Tickets.Infrastructure.csproj" />
+    <ProjectReference Include="..\..\src\Modules\Forms\CrmSuite.Modules.Forms.Application\CrmSuite.Modules.Forms.Application.csproj" />
+    <ProjectReference Include="..\..\src\Modules\Forms\CrmSuite.Modules.Forms.Domain\CrmSuite.Modules.Forms.Domain.csproj" />
+    <ProjectReference Include="..\..\src\Modules\Forms\CrmSuite.Modules.Forms.Infrastructure\CrmSuite.Modules.Forms.Infrastructure.csproj" />
+    <ProjectReference Include="..\..\src\Modules\Notifications\CrmSuite.Modules.Notifications.Application\CrmSuite.Modules.Notifications.Application.csproj" />
+    <ProjectReference Include="..\..\src\Modules\Notifications\CrmSuite.Modules.Notifications.Domain\CrmSuite.Modules.Notifications.Domain.csproj" />
+    <ProjectReference Include="..\..\src\Modules\Notifications\CrmSuite.Modules.Notifications.Infrastructure\CrmSuite.Modules.Notifications.Infrastructure.csproj" />
+    <ProjectReference Include="..\..\src\Modules\Reports\CrmSuite.Modules.Reports.Application\CrmSuite.Modules.Reports.Application.csproj" />
+    <ProjectReference Include="..\..\src\Modules\Reports\CrmSuite.Modules.Reports.Infrastructure\CrmSuite.Modules.Reports.Infrastructure.csproj" />
+    <ProjectReference Include="..\..\src\Modules\Settings\CrmSuite.Modules.Settings.Application\CrmSuite.Modules.Settings.Application.csproj" />
+    <ProjectReference Include="..\..\src\Modules\Settings\CrmSuite.Modules.Settings.Domain\CrmSuite.Modules.Settings.Domain.csproj" />
+    <ProjectReference Include="..\..\src\Modules\Settings\CrmSuite.Modules.Settings.Infrastructure\CrmSuite.Modules.Settings.Infrastructure.csproj" />
+    <ProjectReference Include="..\..\src\Modules\Workflow\CrmSuite.Modules.Workflow.Domain\CrmSuite.Modules.Workflow.Domain.csproj" />
+    <ProjectReference Include="..\..\src\Modules\Workflow\CrmSuite.Modules.Workflow.Application\CrmSuite.Modules.Workflow.Application.csproj" />
+    <ProjectReference Include="..\..\src\Modules\Workflow\CrmSuite.Modules.Workflow.Infrastructure\CrmSuite.Modules.Workflow.Infrastructure.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <FrameworkReference Include="Microsoft.AspNetCore.App" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="coverlet.collector">
+      <PrivateAssets>all</PrivateAssets>
+      <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+    </PackageReference>
+    <PackageReference Include="FluentAssertions" />
+    <PackageReference Include="Microsoft.NET.Test.Sdk" />
+    <PackageReference Include="Moq" />
+    <PackageReference Include="xunit" />
+    <PackageReference Include="xunit.runner.visualstudio">
+      <PrivateAssets>all</PrivateAssets>
+      <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+    </PackageReference>
+  </ItemGroup>
+</Project>

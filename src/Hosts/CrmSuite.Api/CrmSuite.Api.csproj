@@ -1,0 +1,69 @@
+<Project Sdk="Microsoft.NET.Sdk.Web">
+  <PropertyGroup>
+    <UserSecretsId>crm-suite-api-foundation</UserSecretsId>
+    <Description>Composition root for the CrmSuite modular monolith.</Description>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\BuildingBlocks\CrmSuite.BuildingBlocks.Application\CrmSuite.BuildingBlocks.Application.csproj" />
+    <ProjectReference Include="..\..\BuildingBlocks\CrmSuite.BuildingBlocks.Infrastructure\CrmSuite.BuildingBlocks.Infrastructure.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\Modules\Foundation\CrmSuite.Modules.Foundation.Api\CrmSuite.Modules.Foundation.Api.csproj" />
+    <ProjectReference Include="..\..\Modules\Foundation\CrmSuite.Modules.Foundation.Infrastructure\CrmSuite.Modules.Foundation.Infrastructure.csproj" />
+    <ProjectReference Include="..\..\Modules\Identity\CrmSuite.Modules.Identity.Api\CrmSuite.Modules.Identity.Api.csproj" />
+    <ProjectReference Include="..\..\Modules\Identity\CrmSuite.Modules.Identity.Infrastructure\CrmSuite.Modules.Identity.Infrastructure.csproj" />
+    <ProjectReference Include="..\..\Modules\Customers\CrmSuite.Modules.Customers.Api\CrmSuite.Modules.Customers.Api.csproj" />
+    <ProjectReference Include="..\..\Modules\Customers\CrmSuite.Modules.Customers.Infrastructure\CrmSuite.Modules.Customers.Infrastructure.csproj" />
+    <ProjectReference Include="..\..\Modules\Catalog\CrmSuite.Modules.Catalog.Api\CrmSuite.Modules.Catalog.Api.csproj" />
+    <ProjectReference Include="..\..\Modules\Catalog\CrmSuite.Modules.Catalog.Infrastructure\CrmSuite.Modules.Catalog.Infrastructure.csproj" />
+    <ProjectReference Include="..\..\Modules\Orders\CrmSuite.Modules.Orders.Api\CrmSuite.Modules.Orders.Api.csproj" />
+    <ProjectReference Include="..\..\Modules\Orders\CrmSuite.Modules.Orders.Infrastructure\CrmSuite.Modules.Orders.Infrastructure.csproj" />
+    <ProjectReference Include="..\..\Modules\Billing\CrmSuite.Modules.Billing.Api\CrmSuite.Modules.Billing.Api.csproj" />
+    <ProjectReference Include="..\..\Modules\Billing\CrmSuite.Modules.Billing.Infrastructure\CrmSuite.Modules.Billing.Infrastructure.csproj" />
+    <ProjectReference Include="..\..\Modules\Payments\CrmSuite.Modules.Payments.Api\CrmSuite.Modules.Payments.Api.csproj" />
+    <ProjectReference Include="..\..\Modules\Payments\CrmSuite.Modules.Payments.Infrastructure\CrmSuite.Modules.Payments.Infrastructure.csproj" />
+    <ProjectReference Include="..\..\Modules\Wallet\CrmSuite.Modules.Wallet.Api\CrmSuite.Modules.Wallet.Api.csproj" />
+    <ProjectReference Include="..\..\Modules\Wallet\CrmSuite.Modules.Wallet.Infrastructure\CrmSuite.Modules.Wallet.Infrastructure.csproj" />
+    <ProjectReference Include="..\..\Modules\Commission\CrmSuite.Modules.Commission.Api\CrmSuite.Modules.Commission.Api.csproj" />
+    <ProjectReference Include="..\..\Modules\Commission\CrmSuite.Modules.Commission.Infrastructure\CrmSuite.Modules.Commission.Infrastructure.csproj" />
+    <ProjectReference Include="..\..\Modules\Tickets\CrmSuite.Modules.Tickets.Api\CrmSuite.Modules.Tickets.Api.csproj" />
+    <ProjectReference Include="..\..\Modules\Tickets\CrmSuite.Modules.Tickets.Infrastructure\CrmSuite.Modules.Tickets.Infrastructure.csproj" />
+    <ProjectReference Include="..\..\Modules\Forms\CrmSuite.Modules.Forms.Api\CrmSuite.Modules.Forms.Api.csproj" />
+    <ProjectReference Include="..\..\Modules\Forms\CrmSuite.Modules.Forms.Infrastructure\CrmSuite.Modules.Forms.Infrastructure.csproj" />
+    <ProjectReference Include="..\..\Modules\Notifications\CrmSuite.Modules.Notifications.Api\CrmSuite.Modules.Notifications.Api.csproj" />
+    <ProjectReference Include="..\..\Modules\Notifications\CrmSuite.Modules.Notifications.Infrastructure\CrmSuite.Modules.Notifications.Infrastructure.csproj" />
+    <ProjectReference Include="..\..\Modules\Reports\CrmSuite.Modules.Reports.Api\CrmSuite.Modules.Reports.Api.csproj" />
+    <ProjectReference Include="..\..\Modules\Reports\CrmSuite.Modules.Reports.Infrastructure\CrmSuite.Modules.Reports.Infrastructure.csproj" />
+    <ProjectReference Include="..\..\Modules\Settings\CrmSuite.Modules.Settings.Api\CrmSuite.Modules.Settings.Api.csproj" />
+    <ProjectReference Include="..\..\Modules\Settings\CrmSuite.Modules.Settings.Infrastructure\CrmSuite.Modules.Settings.Infrastructure.csproj" />
+    <ProjectReference Include="..\..\Modules\Workflow\CrmSuite.Modules.Workflow.Api\CrmSuite.Modules.Workflow.Api.csproj" />
+    <ProjectReference Include="..\..\Modules\Workflow\CrmSuite.Modules.Workflow.Infrastructure\CrmSuite.Modules.Workflow.Infrastructure.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="AspNetCore.HealthChecks.MySql" />
+    <PackageReference Include="Hangfire.AspNetCore" />
+    <PackageReference Include="Hangfire.MySqlStorage" />
+    <PackageReference Include="Microsoft.AspNetCore.Authentication.JwtBearer" />
+    <PackageReference Include="Microsoft.EntityFrameworkCore.Design">
+      <PrivateAssets>all</PrivateAssets>
+      <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+    </PackageReference>
+    <PackageReference Include="Microsoft.Extensions.Hosting.WindowsServices" />
+    <PackageReference Include="Pomelo.EntityFrameworkCore.MySql" />
+    <PackageReference Include="Serilog.AspNetCore" />
+    <PackageReference Include="Serilog.Enrichers.Environment" />
+    <PackageReference Include="Serilog.Sinks.Console" />
+    <PackageReference Include="Serilog.Sinks.File" />
+    <PackageReference Include="Serilog.Sinks.Seq" />
+    <PackageReference Include="Swashbuckle.AspNetCore" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Content Update="appsettings*.json">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+  </ItemGroup>
+</Project>

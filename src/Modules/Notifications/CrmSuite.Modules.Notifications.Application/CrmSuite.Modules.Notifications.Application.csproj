@@ -1,0 +1,14 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <Description>Notifications module application layer (commands, queries, DTOs, validators).</Description>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\CrmSuite.Modules.Notifications.Domain\CrmSuite.Modules.Notifications.Domain.csproj" />
+    <ProjectReference Include="..\..\..\BuildingBlocks\CrmSuite.BuildingBlocks.Application\CrmSuite.BuildingBlocks.Application.csproj" />
+    <ProjectReference Include="..\..\Foundation\CrmSuite.Modules.Foundation.Application\CrmSuite.Modules.Foundation.Application.csproj" />
+    <ProjectReference Include="..\..\Customers\CrmSuite.Modules.Customers.Application\CrmSuite.Modules.Customers.Application.csproj" />
+    <ProjectReference Include="..\..\Tickets\CrmSuite.Modules.Tickets.Application\CrmSuite.Modules.Tickets.Application.csproj" />
+    <ProjectReference Include="..\..\Billing\CrmSuite.Modules.Billing.Application\CrmSuite.Modules.Billing.Application.csproj" />
+  </ItemGroup>
+</Project>

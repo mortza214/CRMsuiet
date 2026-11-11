@@ -1,0 +1,5 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <Description>Primitives, results, domain exceptions and shared domain contracts.</Description>
+  </PropertyGroup>
+</Project>

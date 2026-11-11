@@ -1,0 +1,13 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <Description>Billing module application layer (commands, queries, DTOs, validators).</Description>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\CrmSuite.Modules.Billing.Domain\CrmSuite.Modules.Billing.Domain.csproj" />
+    <ProjectReference Include="..\..\..\BuildingBlocks\CrmSuite.BuildingBlocks.Application\CrmSuite.BuildingBlocks.Application.csproj" />
+    <ProjectReference Include="..\..\Foundation\CrmSuite.Modules.Foundation.Application\CrmSuite.Modules.Foundation.Application.csproj" />
+    <ProjectReference Include="..\..\Orders\CrmSuite.Modules.Orders.Application\CrmSuite.Modules.Orders.Application.csproj" />
+    <ProjectReference Include="..\..\Customers\CrmSuite.Modules.Customers.Application\CrmSuite.Modules.Customers.Application.csproj" />
+  </ItemGroup>
+</Project>

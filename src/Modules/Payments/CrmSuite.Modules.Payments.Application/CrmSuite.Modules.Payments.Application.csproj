@@ -1,0 +1,15 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <Description>Payments module application layer (commands, queries, DTOs, validators).</Description>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\CrmSuite.Modules.Payments.Domain\CrmSuite.Modules.Payments.Domain.csproj" />
+    <ProjectReference Include="..\..\..\BuildingBlocks\CrmSuite.BuildingBlocks.Application\CrmSuite.BuildingBlocks.Application.csproj" />
+    <ProjectReference Include="..\..\Foundation\CrmSuite.Modules.Foundation.Application\CrmSuite.Modules.Foundation.Application.csproj" />
+    <ProjectReference Include="..\..\Billing\CrmSuite.Modules.Billing.Application\CrmSuite.Modules.Billing.Application.csproj" />
+    <ProjectReference Include="..\..\Workflow\CrmSuite.Modules.Workflow.Application\CrmSuite.Modules.Workflow.Application.csproj" />
+    <ProjectReference Include="..\..\Orders\CrmSuite.Modules.Orders.Application\CrmSuite.Modules.Orders.Application.csproj" />
+    <ProjectReference Include="..\..\Customers\CrmSuite.Modules.Customers.Application\CrmSuite.Modules.Customers.Application.csproj" />
+  </ItemGroup>
+</Project>

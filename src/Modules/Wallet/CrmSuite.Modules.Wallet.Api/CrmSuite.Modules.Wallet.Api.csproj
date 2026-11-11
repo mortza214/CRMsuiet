@@ -1,0 +1,16 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <Description>Wallet module HTTP endpoints.</Description>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <FrameworkReference Include="Microsoft.AspNetCore.App" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\CrmSuite.Modules.Wallet.Application\CrmSuite.Modules.Wallet.Application.csproj" />
+    <ProjectReference Include="..\CrmSuite.Modules.Wallet.Infrastructure\CrmSuite.Modules.Wallet.Infrastructure.csproj" />
+    <ProjectReference Include="..\..\Foundation\CrmSuite.Modules.Foundation.Api\CrmSuite.Modules.Foundation.Api.csproj" />
+    <ProjectReference Include="..\..\Identity\CrmSuite.Modules.Identity.Api\CrmSuite.Modules.Identity.Api.csproj" />
+  </ItemGroup>
+</Project>

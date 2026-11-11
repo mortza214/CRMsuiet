@@ -1,0 +1,14 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <Description>Orders module application layer (commands, queries, DTOs, validators).</Description>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\CrmSuite.Modules.Orders.Domain\CrmSuite.Modules.Orders.Domain.csproj" />
+    <ProjectReference Include="..\..\..\BuildingBlocks\CrmSuite.BuildingBlocks.Application\CrmSuite.BuildingBlocks.Application.csproj" />
+    <ProjectReference Include="..\..\Foundation\CrmSuite.Modules.Foundation.Application\CrmSuite.Modules.Foundation.Application.csproj" />
+    <ProjectReference Include="..\..\Customers\CrmSuite.Modules.Customers.Application\CrmSuite.Modules.Customers.Application.csproj" />
+    <ProjectReference Include="..\..\Catalog\CrmSuite.Modules.Catalog.Application\CrmSuite.Modules.Catalog.Application.csproj" />
+    <ProjectReference Include="..\..\Forms\CrmSuite.Modules.Forms.Application\CrmSuite.Modules.Forms.Application.csproj" />
+  </ItemGroup>
+</Project>
