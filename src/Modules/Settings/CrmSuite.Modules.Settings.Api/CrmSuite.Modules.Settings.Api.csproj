@@ -12,5 +12,6 @@
     <ProjectReference Include="..\CrmSuite.Modules.Settings.Infrastructure\CrmSuite.Modules.Settings.Infrastructure.csproj" />
     <ProjectReference Include="..\..\Foundation\CrmSuite.Modules.Foundation.Api\CrmSuite.Modules.Foundation.Api.csproj" />
     <ProjectReference Include="..\..\Identity\CrmSuite.Modules.Identity.Api\CrmSuite.Modules.Identity.Api.csproj" />
+    <ProjectReference Include="..\..\Notifications\CrmSuite.Modules.Notifications.Application\CrmSuite.Modules.Notifications.Application.csproj" />
   </ItemGroup>
 </Project>

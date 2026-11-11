@@ -29,7 +29,8 @@ public sealed class ReviewFeasibilityAction : IWorkflowAction
             context.State,
             context.Order,
             context.ActionDataJson,
-            cancellationToken);
+            cancellationToken,
+            updateExisting: true);
         return submitted.IsFailure
             ? Result.Failure(submitted.Errors, submitted.Message)
             : Result.Success();

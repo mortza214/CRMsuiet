@@ -182,6 +182,22 @@ export function useUpdateRolePermissions() {
   });
 }
 
+export function useTestNotification() {
+  return useMutation({
+    mutationFn: async (payload: {
+      channel: "Sms" | "Bale";
+      recipient: string;
+      message: string;
+    }) => {
+      const response = await api.post<ApiEnvelope<unknown>>(
+        "/settings/notifications/test",
+        payload,
+      );
+      return response.data;
+    },
+  });
+}
+
 export function useSettingsGroup(group: string) {
   return useQuery({
     queryKey: ["settings", "group", group],

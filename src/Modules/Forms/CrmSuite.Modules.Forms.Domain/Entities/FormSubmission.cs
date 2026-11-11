@@ -96,6 +96,23 @@ public sealed class FormSubmission : BaseEntity
         Items.Add(item);
     }
 
+    public void UpdateData(string dataJson, Guid userId, DateTime utcNow, string? note = null)
+    {
+        if (string.IsNullOrWhiteSpace(dataJson))
+        {
+            throw new DomainException("داده‌های پاسخ الزامی است.", "FORMS_SUBMISSION_DATA_REQUIRED");
+        }
+
+        SubmittedDataJson = dataJson;
+        Status = FormSubmissionStatus.Submitted;
+        SubmittedByUserId = userId;
+        SubmittedAt = utcNow;
+        ReviewedByUserId = null;
+        ReviewedAt = null;
+        ReviewNote = note;
+        MarkUpdated(userId, utcNow);
+    }
+
     public void Approve(Guid reviewerId, DateTime utcNow, string? note)
     {
         EnsureReviewable();

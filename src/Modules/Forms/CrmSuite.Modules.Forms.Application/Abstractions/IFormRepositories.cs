@@ -22,6 +22,12 @@ public interface IFormSubmissionRepository
 {
     Task<FormSubmission?> GetByIdAsync(Guid id, CancellationToken cancellationToken);
 
+    Task<FormSubmission?> GetLatestForEntityAsync(
+        Guid formDefinitionId,
+        FormEntityType entityType,
+        Guid entityId,
+        CancellationToken cancellationToken);
+
     Task<bool> ExistsForEntityAsync(
         Guid formDefinitionId,
         FormEntityType entityType,

@@ -35,7 +35,8 @@ public sealed record SubmitFormCommand(
     string SubmittedDataJson,
     bool Portal = false,
     FormEntityType? EntityType = null,
-    Guid? EntityId = null) : IRequest<Result<FormSubmissionDto>>;
+    Guid? EntityId = null,
+    bool UpdateExisting = false) : IRequest<Result<FormSubmissionDto>>;
 
 public sealed record ReviewFormSubmissionCommand(
     Guid SubmissionId,

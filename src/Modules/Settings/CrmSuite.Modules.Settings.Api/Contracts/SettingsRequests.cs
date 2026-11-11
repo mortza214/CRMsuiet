@@ -13,6 +13,13 @@ public sealed class SettingUpdateRequest
     public bool IsSecret { get; init; }
 }
 
+public sealed class TestNotificationRequest
+{
+    public string Channel { get; init; } = "Sms";
+    public string Recipient { get; init; } = string.Empty;
+    public string Message { get; init; } = "پیام تست CRM";
+}
+
 public sealed class UpdateSettingsRequest
 {
     public List<SettingUpdateRequest> Items { get; init; } = [];

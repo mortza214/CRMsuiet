@@ -1,7 +1,8 @@
-import { useEffect } from "react";
-import { App, Button, Card, Form, Input, Space, Switch, Typography } from "antd";
+import { useEffect, useState } from "react";
+import { App, Button, Card, Form, Input, Select, Space, Switch, Typography } from "antd";
 import {
   useSettingsGroup,
+  useTestNotification,
   useUpdateSettings,
 } from "@/modules/settings/hooks/useSettings";
 
@@ -15,6 +16,9 @@ export function NotificationSettingsTab() {
   const { message } = App.useApp();
   const settings = useSettingsGroup("Notifications");
   const update = useUpdateSettings("Notifications");
+  const test = useTestNotification();
+  const [testForm] = Form.useForm<{ channel: "Sms" | "Bale"; recipient: string }>();
+  const [testResult, setTestResult] = useState<string | null>(null);
   const [form] = Form.useForm<NotificationForm>();
 
   useEffect(() => {
@@ -63,6 +67,42 @@ export function NotificationSettingsTab() {
           <Button type="primary" htmlType="submit" loading={update.isPending}>
             ذخیره تنظیمات
           </Button>
+        </Form>
+      </Card>
+
+      <Card title="تست ارسال" variant="borderless" className="settings-section-card">
+        <Form
+          form={testForm}
+          layout="vertical"
+          initialValues={{ channel: "Sms", recipient: "" }}
+          onFinish={async (values) => {
+            try {
+              const result = await test.mutateAsync({
+                channel: values.channel,
+                recipient: values.recipient.trim(),
+                message: "پیام تست CRM",
+              });
+              setTestResult(result.message ?? "ارسال انجام شد.");
+            } catch {
+              setTestResult("ارسال تست انجام نشد.");
+            }
+          }}
+        >
+          <Form.Item name="channel" label="کانال">
+            <Select
+              options={[
+                { value: "Sms", label: "پیامک" },
+                { value: "Bale", label: "بله" },
+              ]}
+            />
+          </Form.Item>
+          <Form.Item name="recipient" label="شماره موبایل / Chat ID" rules={[{ required: true }]}>
+            <Input dir="ltr" />
+          </Form.Item>
+          <Button type="primary" htmlType="submit" loading={test.isPending}>
+            ارسال تست
+          </Button>
+          {testResult && <Typography.Paragraph style={{ marginTop: 12 }}>{testResult}</Typography.Paragraph>}
         </Form>
       </Card>
     </Space>

@@ -20,10 +20,28 @@ namespace CrmSuite.Modules.Settings.Api.Controllers;
 public sealed class SettingsController : ControllerBase
 {
     private readonly IMediator _mediator;
+    private readonly CrmSuite.Modules.Notifications.Application.Abstractions.INotificationService _notifications;
 
-    public SettingsController(IMediator mediator)
+    public SettingsController(
+        IMediator mediator,
+        CrmSuite.Modules.Notifications.Application.Abstractions.INotificationService notifications)
     {
         _mediator = mediator;
+        _notifications = notifications;
+    }
+
+    [HttpPost("notifications/test")]
+    [HasPermission(Permissions.Settings.Sms.Manage)]
+    public async Task<IActionResult> TestNotification(
+        [FromBody] TestNotificationRequest request,
+        CancellationToken cancellationToken)
+    {
+        var result = request.Channel == "Bale"
+            ? await _notifications.SendBale(request.Recipient, request.Message, cancellationToken)
+            : await _notifications.SendSms(request.Recipient, request.Message, cancellationToken);
+        return Ok(CrmSuite.BuildingBlocks.Application.Common.ApiResponse<object>.Ok(
+            new { result.Status, result.Content, result.Error },
+            result.Error ?? "پیام تست ارسال شد."));
     }
 
     [HttpGet]

@@ -24,6 +24,52 @@ public sealed class IppanelSmsProvider : ISmsProvider
         _settingsProvider = settingsProvider;
     }
 
+    public async Task<SmsResult> SendSmsAsync(
+        string recipient,
+        string message,
+        CancellationToken cancellationToken)
+    {
+        var settings = await _settingsProvider.GetAsync(cancellationToken);
+        if (!settings.IsComplete || string.IsNullOrWhiteSpace(settings.ApiKey))
+        {
+            return new SmsResult(false, null, "تنظیمات IPPanel کامل نیست.", null);
+        }
+
+        var baseUrl = settings.BaseUrl.TrimEnd('/');
+        var url = baseUrl.EndsWith(PatternPath, StringComparison.OrdinalIgnoreCase)
+            ? baseUrl
+            : $"{baseUrl}{PatternPath}";
+
+        try
+        {
+            var payload = new
+            {
+                sending_type = "webservice",
+                from_number = settings.FromNumber,
+                message,
+                recipients = new[] { recipient },
+            };
+            using var request = new HttpRequestMessage(HttpMethod.Post, url)
+            {
+                Content = JsonContent.Create(payload),
+            };
+            request.Headers.TryAddWithoutValidation("Authorization", settings.ApiKey);
+            using var response = await _httpClient.SendAsync(request, cancellationToken);
+            var raw = await response.Content.ReadAsStringAsync(cancellationToken);
+            return response.IsSuccessStatusCode
+                ? new SmsResult(true, null, null, raw)
+                : new SmsResult(false, null, $"IPPanel HTTP {(int)response.StatusCode}: {raw}", raw);
+        }
+        catch (OperationCanceledException) when (!cancellationToken.IsCancellationRequested)
+        {
+            return new SmsResult(false, null, "زمان پاسخ IPPanel به پایان رسید.", null);
+        }
+        catch (HttpRequestException exception)
+        {
+            return new SmsResult(false, null, exception.Message, null);
+        }
+    }
+
     public async Task<SmsResult> SendPatternAsync(
         string patternCode,
         string fromNumber,

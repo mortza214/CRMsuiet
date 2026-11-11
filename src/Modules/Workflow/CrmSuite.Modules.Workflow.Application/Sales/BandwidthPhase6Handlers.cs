@@ -73,7 +73,8 @@ public sealed class BandwidthPhase6Support
         WorkflowState state,
         Order order,
         string dataJson,
-        CancellationToken cancellationToken)
+        CancellationToken cancellationToken,
+        bool updateExisting = false)
     {
         if (string.IsNullOrWhiteSpace(state.FormCode))
         {
@@ -95,7 +96,8 @@ public sealed class BandwidthPhase6Support
                 order.Id,
                 dataJson,
                 EntityType: FormEntityType.Order,
-                EntityId: order.Id),
+                EntityId: order.Id,
+                UpdateExisting: updateExisting),
             cancellationToken);
 
         return result.IsFailure

@@ -8,6 +8,12 @@ public sealed record SmsResult(
 
 public interface ISmsProvider
 {
+    Task<SmsResult> SendSmsAsync(
+        string recipient,
+        string message,
+        CancellationToken cancellationToken) =>
+        Task.FromResult(new SmsResult(false, null, "ارسال پیامک پشتیبانی نمی‌شود.", null));
+
     Task<SmsResult> SendPatternAsync(
         string patternCode,
         string fromNumber,

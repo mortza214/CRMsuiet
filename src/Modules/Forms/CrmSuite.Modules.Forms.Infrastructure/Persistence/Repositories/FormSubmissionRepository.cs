@@ -20,6 +20,18 @@ public sealed class FormSubmissionRepository : IFormSubmissionRepository
         _dbContext.Set<FormSubmission>()
             .SingleOrDefaultAsync(submission => submission.Id == id, cancellationToken);
 
+    public Task<FormSubmission?> GetLatestForEntityAsync(
+        Guid formDefinitionId,
+        CrmSuite.Modules.Forms.Domain.Enums.FormEntityType entityType,
+        Guid entityId,
+        CancellationToken cancellationToken) =>
+        _dbContext.Set<FormSubmission>()
+            .Where(submission => submission.FormTemplateId == formDefinitionId
+                                 && submission.EntityType == entityType
+                                 && submission.EntityId == entityId)
+            .OrderByDescending(submission => submission.SubmittedAt)
+            .FirstOrDefaultAsync(cancellationToken);
+
     public Task<bool> ExistsForEntityAsync(
         Guid formDefinitionId,
         CrmSuite.Modules.Forms.Domain.Enums.FormEntityType entityType,

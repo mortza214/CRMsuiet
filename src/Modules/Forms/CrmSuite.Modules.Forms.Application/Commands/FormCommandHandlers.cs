@@ -357,6 +357,25 @@ public sealed class SubmitFormCommandHandler
                 "داده‌های فرم با Schema مطابقت ندارد.");
         }
 
+        if (request.UpdateExisting)
+        {
+            var existing = await _submissions.GetLatestForEntityAsync(
+                template.Id,
+                entity.Value!.EntityType,
+                entity.Value.EntityId!.Value,
+                cancellationToken);
+            if (existing is not null)
+            {
+                existing.UpdateData(
+                    request.SubmittedDataJson,
+                    _currentUser.UserId.Value,
+                    _clock.UtcNow);
+                await _unitOfWork.SaveChangesAsync(cancellationToken);
+                _auditScope.EntityId = existing.Id.ToString();
+                return Result.Success(_mapper.ToSubmissionDto(existing, template.Title, null));
+            }
+        }
+
         var submission = new FormSubmission(
             template.Id,
             template.Version,
