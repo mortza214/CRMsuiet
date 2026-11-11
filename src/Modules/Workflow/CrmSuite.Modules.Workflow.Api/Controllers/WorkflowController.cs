@@ -130,6 +130,19 @@ public sealed class WorkflowController : ControllerBase
         return this.ToApiResult(result, "گردش کار برای ویرایش مستقیم باز شد.");
     }
 
+    [HttpPost("definitions/{id:guid}/clone")]
+    [HasPermission(Permissions.Workflow.Definition.Manage)]
+    public async Task<IActionResult> CloneDefinition(
+        Guid id,
+        [FromBody] CloneWorkflowDefinitionRequest? request,
+        CancellationToken cancellationToken)
+    {
+        var result = await _mediator.Send(
+            new CloneWorkflowDefinitionCommand(id, request?.Code),
+            cancellationToken);
+        return this.ToApiResult(result, "نسخه پیش‌نویس از گردش کار ایجاد شد.");
+    }
+
     [HttpPost("definitions/{id:guid}/archive")]
     [HasPermission(Permissions.Workflow.Definition.Manage)]
     public async Task<IActionResult> ArchiveDefinition(

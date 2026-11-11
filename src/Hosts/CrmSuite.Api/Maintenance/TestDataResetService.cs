@@ -67,31 +67,9 @@ public sealed class TestDataResetService
         await _dbContext.Set<CustomerOtp>().ExecuteDeleteAsync(cancellationToken);
         var customers = await _dbContext.Set<Customer>().ExecuteDeleteAsync(cancellationToken);
 
-        var superAdmin = await _dbContext.Set<User>()
-            .SingleOrDefaultAsync(user => user.Username == "superadmin", cancellationToken);
-
-        if (superAdmin is not null)
-        {
-            await _dbContext.Set<UserRole>()
-                .Where(userRole => userRole.UserId != superAdmin.Id)
-                .ExecuteDeleteAsync(cancellationToken);
-            await _dbContext.Set<UserDepartment>()
-                .Where(userDepartment => userDepartment.UserId != superAdmin.Id)
-                .ExecuteDeleteAsync(cancellationToken);
-        }
-        else
-        {
-            await _dbContext.Set<UserRole>().ExecuteDeleteAsync(cancellationToken);
-            await _dbContext.Set<UserDepartment>().ExecuteDeleteAsync(cancellationToken);
-        }
-
-        await _dbContext.Set<RefreshToken>().ExecuteDeleteAsync(cancellationToken);
-
-        var testUsers = superAdmin is null
-            ? await _dbContext.Set<User>().ExecuteDeleteAsync(cancellationToken)
-            : await _dbContext.Set<User>()
-                .Where(user => user.Id != superAdmin.Id)
-                .ExecuteDeleteAsync(cancellationToken);
+        // Users, roles and departments are master/security data and must never be
+        // removed by the test-data reset. Only transactional data is cleared.
+        const int testUsers = 0;
 
         await _dbContext.Set<AuditLog>().ExecuteDeleteAsync(cancellationToken);
         await _dbContext.Set<Sequence>()

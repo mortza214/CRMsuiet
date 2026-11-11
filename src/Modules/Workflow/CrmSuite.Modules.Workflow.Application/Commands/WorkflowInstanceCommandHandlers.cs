@@ -348,11 +348,18 @@ public sealed class ExecuteWorkflowTransitionCommandHandler
         }
 
         var now = _clock.UtcNow;
-        var currentTask = instance.Tasks
+        // Only one task may be active for a state. If the state has several assigned
+        // tasks (for example after a manual reassignment), close the older ones.
+        var staleTasks = instance.Tasks
             .Where(task => task.StateId == currentState.Id
                            && task.Status is WorkflowTaskStatus.Pending or WorkflowTaskStatus.InProgress)
             .OrderByDescending(task => task.CreatedAt)
-            .FirstOrDefault();
+            .ToArray();
+        var currentTask = staleTasks.FirstOrDefault();
+        foreach (var staleTask in staleTasks.Skip(1))
+        {
+            staleTask.Complete(_currentUser.UserId ?? actor.UserId, now);
+        }
 
         WorkflowTask? nextTask = null;
         if (targetState.StateType != WorkflowStateType.End && !targetState.IsFinal)

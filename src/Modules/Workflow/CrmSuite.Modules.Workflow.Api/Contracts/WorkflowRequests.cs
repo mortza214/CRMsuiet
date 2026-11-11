@@ -93,6 +93,11 @@ public sealed class ExecuteWorkflowActionRequest
     public string? ActionDataJson { get; init; }
 }
 
+public sealed class CloneWorkflowDefinitionRequest
+{
+    public string? Code { get; init; }
+}
+
 public sealed class CancelWorkflowRequest
 {
     public string? Reason { get; init; }

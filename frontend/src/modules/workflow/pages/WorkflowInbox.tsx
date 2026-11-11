@@ -45,7 +45,6 @@ const taskStatusMeta: Record<WorkflowTaskStatus, { label: string; color: string 
 };
 
 interface ActionForm {
-  transitionId: string;
   comment?: string;
   payloadJson?: string;
 }
@@ -111,9 +110,6 @@ export function WorkflowInbox() {
 
     try {
       await execute.mutateAsync({
-        transitionId: actionKey === "FillForm" || actionKey === "None"
-          ? undefined
-          : values.transitionId,
         actionDataJson: JSON.stringify(actionPayload),
       });
       message.success("اکشن با موفقیت اجرا شد.");
@@ -294,21 +290,7 @@ export function WorkflowInbox() {
         confirmLoading={execute.isPending}
       >
         <Form form={actionForm} layout="vertical" onFinish={submitAction}>
-          {selectedTaskAction?.actionKey !== "FillForm" &&
-            selectedTaskAction?.actionKey !== "None" && (
-            <Form.Item
-              name="transitionId"
-              label="گذار"
-              rules={[{ required: true, message: "گذار را انتخاب کنید." }]}
-            >
-              <Select
-                options={(selectedTask?.availableTransitions ?? []).map((transition) => ({
-                  value: transition.id,
-                  label: transition.name,
-                }))}
-              />
-            </Form.Item>
-          )}
+
           {selectedTaskAction?.actionKey === "DecideSiteVisit" && (
             <>
               <WorkflowFormRenderer

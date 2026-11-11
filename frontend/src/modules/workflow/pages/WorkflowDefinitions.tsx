@@ -1,5 +1,6 @@
 import { useState } from "react";
 import {
+  CopyOutlined,
   EditOutlined,
   EyeOutlined,
   PlusOutlined,
@@ -26,6 +27,7 @@ import { useNavigate } from "react-router-dom";
 import { useAuthStore } from "@/modules/auth/store";
 import {
   useArchiveWorkflowDefinition,
+  useCloneWorkflowDefinition,
   useCreateWorkflowDefinition,
   usePublishWorkflowDefinition,
   useWorkflowDefinitions,
@@ -78,6 +80,7 @@ export function WorkflowDefinitions() {
     entityType,
   });
   const createDefinition = useCreateWorkflowDefinition();
+  const cloneDefinition = useCloneWorkflowDefinition();
   const publishDefinition = usePublishWorkflowDefinition();
   const archiveDefinition = useArchiveWorkflowDefinition();
 
@@ -109,6 +112,16 @@ export function WorkflowDefinitions() {
       message.success("گردش کار منتشر شد.");
     } catch {
       // پیام خطا توسط NotificationProvider نمایش داده می‌شود.
+    }
+  };
+
+  const clone = async (id: string) => {
+    try {
+      const created = await cloneDefinition.mutateAsync(id);
+      message.success("نسخه پیش‌نویس ایجاد شد.");
+      navigate(`/workflow/definitions/${created.id}`);
+    } catch {
+      // NotificationProvider handles errors.
     }
   };
 
@@ -210,6 +223,16 @@ export function WorkflowDefinitions() {
                 </Button>
               </Popconfirm>
             </>
+          )}
+          {canManage && record.status === "Published" && (
+            <Button
+              type="link"
+              icon={<CopyOutlined />}
+              loading={cloneDefinition.isPending}
+              onClick={() => void clone(record.id)}
+            >
+              کلون به پیش‌نویس
+            </Button>
           )}
           {canManage && record.status === "Published" && (
             <Popconfirm

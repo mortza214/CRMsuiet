@@ -105,6 +105,22 @@ export function usePublishWorkflowDefinition() {
   });
 }
 
+export function useCloneWorkflowDefinition() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async (sourceId: string) => {
+      const response = await api.post<ApiEnvelope<WorkflowDefinition>>(
+        `/workflow/definitions/${sourceId}/clone`,
+        {},
+      );
+      return response.data.data as WorkflowDefinition;
+    },
+    onSuccess: async () => {
+      await queryClient.invalidateQueries({ queryKey: ["workflow"] });
+    },
+  });
+}
+
 export function useReopenWorkflowDefinition() {
   const queryClient = useQueryClient();
   return useMutation({
