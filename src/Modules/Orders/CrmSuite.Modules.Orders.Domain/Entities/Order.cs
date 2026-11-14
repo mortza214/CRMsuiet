@@ -81,6 +81,12 @@ public sealed class Order : BaseEntity
         PayableAmount = TotalAmount - DiscountAmount;
     }
 
+    public void AssignSalesExpert(Guid userId, DateTime utcNow)
+    {
+        SalesExpertId = userId;
+        MarkUpdated(userId, utcNow);
+    }
+
     public void EnsureEditable()
     {
         if (Status is not (OrderStatus.Draft or OrderStatus.PendingPayment))

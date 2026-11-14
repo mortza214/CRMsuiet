@@ -1,14 +1,22 @@
-import { useMemo, useState } from "react";
+import { useMemo, useRef, useState } from "react";
 import type { Dayjs } from "dayjs";
 import {
   Checkbox,
+  App,
+  Button,
   DatePicker,
   Input,
   InputNumber,
   Select,
   Space,
   Typography,
+  Upload,
 } from "antd";
+import { UploadOutlined } from "@ant-design/icons";
+import { api } from "@/shared/api/client";
+import { portalApi } from "@/modules/portal/api";
+import { resolveApiFileUrl } from "@/shared/utils/format";
+import type { ApiEnvelope } from "@/modules/auth/types";
 import { useFormTemplateByCode } from "@/modules/forms/hooks/useForms";
 
 interface SchemaField {
@@ -16,11 +24,15 @@ interface SchemaField {
   label: string;
   type: string;
   required?: boolean;
+  min?: number;
+  max?: number;
   options?: Array<{ value: string; label: string }>;
   visibleIf?: { field: string; equals?: unknown; notEquals?: unknown };
 }
 
 interface Props {
+  portal?: boolean;
+  onUploadingChange?: (uploading: boolean) => void;
   formCode?: string;
   schemaJson?: string | null;
   readOnly?: boolean;
@@ -38,6 +50,8 @@ function parseFields(schemaJson?: string | null): SchemaField[] {
       label: String(field.label ?? field.key ?? ""),
       type: String(field.type ?? "text"),
       required: Boolean(field.required),
+      min: typeof field.min === "number" ? field.min : undefined,
+      max: typeof field.max === "number" ? field.max : undefined,
       options: Array.isArray(field.options)
         ? field.options.map((option) => {
             const item = option as Record<string, unknown>;
@@ -62,7 +76,21 @@ function visible(field: SchemaField, values: Record<string, unknown>) {
   return true;
 }
 
+export function validateWorkflowForm(schemaJson: string | null | undefined, values: Record<string, unknown>): string | null {
+  const fields = parseFields(schemaJson);
+  for (const field of fields.filter(item => visible(item, values))) {
+    const value = values[field.key];
+    if (field.required && (value === undefined || value === null || value === "" || (typeof value === "string" && !value.trim())))
+      return `فیلد «${field.label}» الزامی است.`;
+    if (typeof value === "number" && ((field.min !== undefined && value < field.min) || (field.max !== undefined && value > field.max)))
+      return `مقدار «${field.label}» خارج از محدوده مجاز است.`;
+  }
+  return null;
+}
+
 export function WorkflowFormRenderer({
+  portal = false,
+  onUploadingChange,
   formCode,
   schemaJson,
   readOnly = false,
@@ -70,9 +98,13 @@ export function WorkflowFormRenderer({
   onChange,
   onDataChange,
 }: Props) {
+  const { message } = App.useApp();
+  const [uploading, setUploading] = useState(false);
   const template = useFormTemplateByCode(formCode);
   const [internalValues, setInternalValues] = useState<Record<string, unknown>>({});
   const actualValues = values ?? internalValues;
+  const valuesRef = useRef(actualValues);
+  valuesRef.current = actualValues;
   const actualSchema = schemaJson ?? template.data?.schemaJson;
   const fields = useMemo(() => parseFields(actualSchema), [actualSchema]);
 
@@ -85,7 +117,8 @@ export function WorkflowFormRenderer({
   }
 
   const update = (key: string, value: unknown) => {
-    const next = { ...actualValues, [key]: value };
+    const next = { ...valuesRef.current, [key]: value };
+    valuesRef.current = next;
     setInternalValues(next);
     onChange?.(next);
     onDataChange?.(next);
@@ -114,6 +147,8 @@ export function WorkflowFormRenderer({
                 />
               ) : field.type === "number" ? (
                 <InputNumber
+                  min={field.min}
+                  max={field.max}
                   style={{ width: "100%" }}
                   value={typeof actualValues[field.key] === "number" ? (actualValues[field.key] as number) : undefined}
                   onChange={(value) => update(field.key, value)}
@@ -136,6 +171,22 @@ export function WorkflowFormRenderer({
                     update(field.key, value ? value.toISOString() : null)
                   }
                 />
+              ) : field.type === "file" ? (
+                <Space direction="vertical">
+                  {!readOnly && <Upload accept=".jpg,.jpeg,.png,.pdf" showUploadList={false}
+                    customRequest={({ file, onSuccess, onError }) => {
+                      setUploading(true);
+                      onUploadingChange?.(true);
+                      const body = new FormData(); body.append("file", file as File);
+                      void (portal ? portalApi : api).post<ApiEnvelope<{ fileUrl: string }>>("/files/upload", body,
+                        { headers: { "Content-Type": "multipart/form-data" } })
+                        .then(response => { update(field.key, response.data.data?.fileUrl); onSuccess?.(undefined); })
+                        .catch(error => { message.error("بارگذاری فایل ناموفق بود."); onError?.(error); })
+                        .finally(() => { setUploading(false); onUploadingChange?.(false); });
+                    }}><Button loading={uploading} icon={<UploadOutlined />}>بارگذاری عکس / فایل</Button></Upload>}
+                  {typeof actualValues[field.key] === "string" && /^\/(?:uploads|api\/files)\//.test(String(actualValues[field.key])) &&
+                    <Typography.Link href={resolveApiFileUrl(String(actualValues[field.key]))} target="_blank" rel="noopener noreferrer">مشاهده پیوست</Typography.Link>}
+                </Space>
               ) : field.type === "textarea" ? (
                 <Input.TextArea
                   rows={3}

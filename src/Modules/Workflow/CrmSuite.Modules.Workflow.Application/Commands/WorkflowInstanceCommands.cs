@@ -18,7 +18,8 @@ public sealed record ExecuteWorkflowTransitionCommand(
     Guid TransitionId,
     string? Comment = null,
     string? PayloadJson = null,
-    string? IdempotencyKey = null) : IRequest<Result<WorkflowInstanceDto>>;
+    string? IdempotencyKey = null,
+    bool ActionValidated = false) : IRequest<Result<WorkflowInstanceDto>>;
 
 public sealed record CancelWorkflowInstanceCommand(
     Guid InstanceId,

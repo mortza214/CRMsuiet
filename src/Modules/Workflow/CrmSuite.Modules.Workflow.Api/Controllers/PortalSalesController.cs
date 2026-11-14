@@ -20,6 +20,15 @@ public sealed class PortalSalesController : ControllerBase
         _mediator = mediator;
     }
 
+    [HttpPost("requests")]
+    public async Task<IActionResult> CreateRequest([FromBody] CreateServiceRequestRequest request, CancellationToken cancellationToken)
+    {
+        // The handler resolves the customer from the authenticated portal user; submitted CustomerId is ignored.
+        var result = await _mediator.Send(new CreateServiceRequestCommand(Guid.Empty, request.ServiceId,
+            request.AttributesJson, FromPortal: true), cancellationToken);
+        return this.ToApiResult(result, "درخواست ثبت شد و منتظر بررسی فروش است.");
+    }
+
     [HttpGet("requests")]
     public async Task<IActionResult> GetMyRequests(CancellationToken cancellationToken)
     {

@@ -12,6 +12,7 @@ export function RequestList() {
   const [status, setStatus] = useState<string | undefined>();
   const [onlyMine, setOnlyMine] = useState(false);
   const currentUserId = useAuthStore((state) => state.user?.id);
+  const canCreate = useAuthStore(state => state.hasPermission("Orders.Order.Create"));
   const requests = useRecentServiceRequests(
     onlyMine ? currentUserId : undefined,
     50,
@@ -96,9 +97,9 @@ export function RequestList() {
             فهرست درخواست‌های سرویس و مرحله فعلی گردش کار
           </Typography.Text>
         </div>
-        <Button icon={<ReloadOutlined />} onClick={() => void requests.refetch()}>
+        <Space>{canCreate && <Button type="primary" onClick={() => navigate("/requests/new")}>درخواست سرویس جدید</Button>}<Button icon={<ReloadOutlined />} onClick={() => void requests.refetch()}>
           بازخوانی
-        </Button>
+        </Button></Space>
       </div>
       <Card variant="borderless" className="settings-section-card">
         <Space wrap style={{ marginBottom: 16 }}>

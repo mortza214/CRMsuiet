@@ -21,6 +21,9 @@ public sealed class WorkflowInstanceRepository : IWorkflowInstanceRepository
         WithGraph()
             .SingleOrDefaultAsync(instance => instance.Id == id, cancellationToken);
 
+    public Task<bool> HasDefinitionInstancesAsync(Guid definitionId, CancellationToken cancellationToken) =>
+        _dbContext.Set<WorkflowInstance>().AnyAsync(instance => instance.DefinitionId == definitionId, cancellationToken);
+
     public Task<WorkflowInstance?> GetByIdempotencyKeyAsync(
         string idempotencyKey,
         CancellationToken cancellationToken) =>

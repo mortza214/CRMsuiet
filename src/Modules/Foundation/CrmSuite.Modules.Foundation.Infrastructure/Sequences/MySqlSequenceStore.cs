@@ -38,9 +38,10 @@ public sealed class MySqlSequenceStore : ISequenceStore
 
         return await strategy.ExecuteAsync(async () =>
         {
-            await using var transaction = await _dbContext.Database.BeginTransactionAsync(
+            await using var transaction = _dbContext.Database.CurrentTransaction is null
+                ? await _dbContext.Database.BeginTransactionAsync(
                 IsolationLevel.ReadCommitted,
-                cancellationToken);
+                cancellationToken) : null;
 
             var sequence = await _dbContext.Set<Sequence>()
                 .FromSqlInterpolated(
@@ -57,7 +58,7 @@ public sealed class MySqlSequenceStore : ISequenceStore
             sequence.AllocateNext();
             sequence.MarkUpdated(_currentUser.UserId, _clock.UtcNow);
             await _dbContext.SaveChangesAsync(cancellationToken);
-            await transaction.CommitAsync(cancellationToken);
+            if (transaction is not null) await transaction.CommitAsync(cancellationToken);
 
             return new SequenceAllocation(sequence.Prefix, sequence.CurrentValue, sequence.Format);
         });

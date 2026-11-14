@@ -19,8 +19,8 @@ public sealed class ReviewFeasibilityAction : IWorkflowAction
         WorkflowActionContext context,
         CancellationToken cancellationToken)
     {
-        if (string.IsNullOrWhiteSpace(context.ActionDataJson)
-            || context.ActionDataJson == "{}")
+        if (context.Definition.Code != BandwidthIntake.Code && (string.IsNullOrWhiteSpace(context.ActionDataJson)
+            || context.ActionDataJson == "{}"))
         {
             return Result.Success();
         }

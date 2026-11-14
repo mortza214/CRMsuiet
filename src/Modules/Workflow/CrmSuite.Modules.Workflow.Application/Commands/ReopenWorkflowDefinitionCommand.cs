@@ -22,6 +22,7 @@ public sealed class ReopenWorkflowDefinitionCommandHandler
     private readonly FoundationCurrentUser _currentUser;
     private readonly IDateTimeProvider _clock;
     private readonly WorkflowDtoMapper _mapper;
+    private readonly IWorkflowInstanceRepository _instances;
 
     public ReopenWorkflowDefinitionCommandHandler(
         IWorkflowDefinitionRepository definitions,
@@ -29,7 +30,8 @@ public sealed class ReopenWorkflowDefinitionCommandHandler
         IAuditScope auditScope,
         FoundationCurrentUser currentUser,
         IDateTimeProvider clock,
-        WorkflowDtoMapper mapper)
+        WorkflowDtoMapper mapper,
+        IWorkflowInstanceRepository instances)
     {
         _definitions = definitions;
         _unitOfWork = unitOfWork;
@@ -37,6 +39,7 @@ public sealed class ReopenWorkflowDefinitionCommandHandler
         _currentUser = currentUser;
         _clock = clock;
         _mapper = mapper;
+        _instances = instances;
     }
 
     public async Task<Result<WorkflowDefinitionDto>> Handle(
@@ -53,6 +56,8 @@ public sealed class ReopenWorkflowDefinitionCommandHandler
                 "WORKFLOW_DEFINITION_NOT_FOUND");
         }
 
+        if (await _instances.HasDefinitionInstancesAsync(definition.Id, cancellationToken))
+            return Result.Failure<WorkflowDefinitionDto>("این گردش کار درخواست ثبت‌شده دارد؛ ابتدا درخواست‌های آزمایشی را پاک کنید.", "WORKFLOW_DEFINITION_IN_USE");
         try
         {
             definition.ReopenForEditing(_currentUser.UserId, _clock.UtcNow);

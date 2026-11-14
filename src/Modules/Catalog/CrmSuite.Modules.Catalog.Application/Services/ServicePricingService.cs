@@ -13,7 +13,8 @@ public sealed record ServicePricingRequest(
     Guid ServiceId,
     int Quantity,
     IReadOnlyCollection<AddonSelection> Addons,
-    string? AttributesJson);
+    string? AttributesJson,
+    bool SkipAttributeValidation = false);
 
 public sealed record ServicePricingResult(
     PricePreviewDto Preview,
@@ -71,7 +72,7 @@ public sealed class ServicePricingService : IServicePricingService
             quantity = 1;
         }
 
-        if (!string.IsNullOrWhiteSpace(service.AttributeSchemaJson))
+        if (!request.SkipAttributeValidation && !string.IsNullOrWhiteSpace(service.AttributeSchemaJson))
         {
             var attributes = string.IsNullOrWhiteSpace(request.AttributesJson)
                 ? "{}"

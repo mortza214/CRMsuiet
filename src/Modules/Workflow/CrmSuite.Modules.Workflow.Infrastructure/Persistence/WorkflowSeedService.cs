@@ -3,6 +3,9 @@ using CrmSuite.Modules.Identity.Domain.Entities;
 using CrmSuite.Modules.Workflow.Domain.Entities;
 using CrmSuite.Modules.Workflow.Domain.Enums;
 using Microsoft.EntityFrameworkCore;
+using CrmSuite.Modules.Workflow.Application.Sales;
+using CrmSuite.Modules.Catalog.Domain.Entities;
+using CrmSuite.Modules.Catalog.Domain.Enums;
 
 namespace CrmSuite.Modules.Workflow.Infrastructure.Persistence;
 
@@ -38,6 +41,16 @@ public sealed class WorkflowSeedService
         var technicalExpert = await EnsureRoleAsync("TechnicalExpert", "کارشناس فنی", cancellationToken);
         var financeExpert = await EnsureRoleAsync("FinanceExpert", "کارشناس مالی", cancellationToken);
         var now = DateTime.UtcNow;
+        var intake = await _dbContext.Set<WorkflowDefinition>().FirstOrDefaultAsync(item => item.Code == BandwidthIntake.Code, cancellationToken);
+        if (intake is null)
+        {
+            var sales = await EnsureDepartmentAsync("فروش", cancellationToken);
+            intake = BandwidthIntake.Build(sales.Id, technicalManager.Id, now);
+            _dbContext.Set<WorkflowDefinition>().Add(intake);
+            // Bind the existing dedicated-bandwidth sample to the new intake without changing historical requests.
+            var services = await _dbContext.Set<Service>().Where(item => item.ServiceType == ServiceType.BandwidthDedicated).ToListAsync(cancellationToken);
+            foreach (var service in services) service.SetWorkflowDefinition(intake.Id, null, now);
+        }
 
         if (!existingCodes.Contains(BandwidthCode))
         {

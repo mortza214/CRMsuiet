@@ -48,7 +48,8 @@ public sealed record CreateServiceRequestCommand(
     Guid CustomerId,
     Guid ServiceId,
     string AttributesJson,
-    bool RequiresFeasibility = false) : IRequest<Result<ServiceRequestResultDto>>;
+    bool RequiresFeasibility = false,
+    bool FromPortal = false) : IRequest<Result<ServiceRequestResultDto>>;
 
 public sealed record SubmitFeasibilityReportCommand(
     Guid InstanceId,

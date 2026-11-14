@@ -202,8 +202,9 @@ export function useCreateServiceRequest() {
   });
 }
 
-export function useOrderCustomers(search: string) {
+export function useOrderCustomers(search: string, enabled = true) {
   return useQuery({
+    enabled,
     queryKey: ["customers", "order-select", search],
     queryFn: async () => {
       const response = await api.get<

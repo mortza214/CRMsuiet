@@ -11,6 +11,8 @@ export type WorkflowAssigneeType =
   | "Role"
   | "Department"
   | "CustomerOwner"
+  | "RequestSalesOwner"
+  | "Customer"
   | "None";
 export type WorkflowGuardType = "None" | "PermissionOnly" | "Plugin";
 export type WorkflowInstanceStatus = "Running" | "Completed" | "Cancelled";
@@ -77,6 +79,7 @@ export interface WorkflowDefinition {
 }
 
 export interface WorkflowTask {
+  assigneeName?: string;
   id: string;
   instanceId: string;
   stateId: string;
@@ -117,6 +120,7 @@ export interface WorkflowHistory {
 }
 
 export interface WorkflowInstance {
+  canExecute?: boolean;
   id: string;
   definitionId: string;
   definitionCode: string;

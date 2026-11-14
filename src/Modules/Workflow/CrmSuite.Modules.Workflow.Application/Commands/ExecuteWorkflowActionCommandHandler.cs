@@ -20,21 +20,33 @@ public sealed class ExecuteWorkflowActionCommandHandler
     private readonly BandwidthPhase6Support _support;
     private readonly IEnumerable<IWorkflowAction> _actions;
     private readonly IMediator _mediator;
+    private readonly CrmSuite.Modules.Workflow.Application.Abstractions.IWorkflowActorAccessor _actors;
 
     public ExecuteWorkflowActionCommandHandler(
         BandwidthPhase6Support support,
         IEnumerable<IWorkflowAction> actions,
-        IMediator mediator)
+        IMediator mediator,
+        CrmSuite.Modules.Workflow.Application.Abstractions.IWorkflowActorAccessor actors)
     {
         _support = support;
         _actions = actions;
         _mediator = mediator;
+        _actors = actors;
     }
 
     public async Task<Result<WorkflowInstanceDto>> Handle(
         ExecuteWorkflowActionCommand request,
         CancellationToken cancellationToken)
     {
+        try
+        {
+            using var payload = JsonDocument.Parse(request.ActionDataJson ?? "{}");
+            if (payload.RootElement.ValueKind != JsonValueKind.Object) throw new JsonException();
+        }
+        catch (JsonException)
+        {
+            return Result.Failure<WorkflowInstanceDto>("داده‌های اقدام معتبر نیست.", "WORKFLOW_ACTION_DATA_INVALID");
+        }
         var loaded = await _support.LoadAsync(request.InstanceId, cancellationToken);
         if (loaded is null)
         {
@@ -62,7 +74,18 @@ public sealed class ExecuteWorkflowActionCommandHandler
         var selectedTransition = transitionId.HasValue
             ? definition.Transitions.FirstOrDefault(item => item.Id == transitionId.Value)
             : null;
+        if ((selectedTransition is null && state.ActionKey != WorkflowActionKey.ActivateService)
+            || (selectedTransition is not null && selectedTransition.FromStateId != state.Id))
+            return Result.Failure<WorkflowInstanceDto>("گذار از مرحله فعلی معتبر نیست.", "WORKFLOW_TRANSITION_NOT_ALLOWED");
+        if (definition.Code == BandwidthIntake.Code)
+        {
+            var actor = await _actors.GetAsync(cancellationToken);
+            var check = BandwidthIntake.ValidateTransition(instance, definition, selectedTransition!,
+                order.Items.FirstOrDefault()?.AttributesJson ?? "{}", actor, request.ActionDataJson);
+            if (check.IsFailure) return Result.Failure<WorkflowInstanceDto>(check.Errors, check.Message);
+        }
         if (selectedTransition is not null
+            && definition.Code != BandwidthIntake.Code
             && TryReadNeedsVisit(request.ActionDataJson, out var needsVisit))
         {
             var targetState = definition.FindState(selectedTransition.ToStateId);
@@ -137,7 +160,8 @@ public sealed class ExecuteWorkflowActionCommandHandler
                 instance.Id,
                 transitionId!.Value,
                 null,
-                request.ActionDataJson),
+                request.ActionDataJson,
+                ActionValidated: true),
             cancellationToken);
         if (transition.IsFailure)
         {

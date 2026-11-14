@@ -43,6 +43,19 @@ public sealed class PermissionProvider : IPermissionProvider
             .OrderBy(code => code)
             .ToListAsync(cancellationToken);
 
+        // Sales department membership permits intake and tracking, independently of a user's other role.
+        var isSalesMember = await _dbContext.Set<UserDepartment>().AnyAsync(item =>
+            item.UserId == userId && item.Department.Name == "فروش", cancellationToken);
+        if (isSalesMember)
+        {
+            permissions.AddRange(new[] {
+                Permissions.Customers.Customer.Read, Permissions.Orders.Order.Create, Permissions.Orders.Order.Read,
+                Permissions.Workflow.Definition.Read, Permissions.Workflow.Instance.Read, Permissions.Workflow.Instance.Execute,
+                Permissions.Workflow.Task.Read, Permissions.Forms.Form.Read, Permissions.Forms.Submission.Read,
+                Permissions.Forms.Submission.Create });
+            permissions = permissions.Distinct(StringComparer.Ordinal).OrderBy(code => code).ToList();
+        }
+
         if (roleNames.Contains(Roles.SuperAdmin, StringComparer.Ordinal))
         {
             permissions.Add(Permissions.Wildcard);

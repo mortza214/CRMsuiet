@@ -33,7 +33,7 @@ import { useCreateManualPayment, useInitiateSamanPayment, useUploadReceipt } fro
 import { formatCurrency, resolveApiFileUrl } from "@/shared/utils/format";
 import { useDepartments } from "@/modules/tickets/hooks/useTickets";
 import { useDepartments as useSettingsDepartments } from "@/modules/settings/hooks/useSettings";
-import { WorkflowFormRenderer } from "../components/WorkflowFormRenderer";
+import { WorkflowFormRenderer, validateWorkflowForm } from "../components/WorkflowFormRenderer";
 import {
   useExecuteWorkflowAction,
   useMyWorkflowTasks,
@@ -74,6 +74,7 @@ export function WorkflowInbox() {
   } | null>(null);
   const [actionOpen, setActionOpen] = useState(false);
   const [actionData, setActionData] = useState<Record<string, unknown>>({});
+  const [formUploading, setFormUploading] = useState(false);
   const [reviewEditable, setReviewEditable] = useState(false);
   const [manualPaymentOpen, setManualPaymentOpen] = useState(false);
   const [receiptImageUrl, setReceiptImageUrl] = useState<string | null>(null);
@@ -106,8 +107,7 @@ export function WorkflowInbox() {
       entityId: selectedTask?.entityId,
       formTemplateId: currentFormTemplate.data?.id,
     },
-    Boolean(selectedTask && selectedTaskAction?.formCode) ||
-      selectedTaskAction?.actionKey === "ReviewFeasibility",
+    Boolean(selectedTask && currentFormTemplate.data?.id),
   );
   const previousFormData = useMemo(() => {
     const json = previousForms.data?.items?.[0]?.submittedDataJson;
@@ -122,7 +122,6 @@ export function WorkflowInbox() {
   useEffect(() => {
     if (
       selectedTaskAction?.formCode &&
-      selectedTaskAction.actionKey !== "ReviewFeasibility" &&
       Object.keys(previousFormData).length > 0
     ) {
       setActionData(previousFormData);
@@ -157,7 +156,7 @@ export function WorkflowInbox() {
       formCode: task.formCode || undefined,
     });
     setActionData({});
-    setReviewEditable(false);
+    setReviewEditable(true);
     actionForm.resetFields();
     setActionOpen(true);
   };
@@ -167,20 +166,21 @@ export function WorkflowInbox() {
     transitionId?: string,
     extraData: Record<string, unknown> = {},
   ) => {
+    if (formUploading) { message.info("تا پایان بارگذاری فایل صبر کنید."); return; }
     const actionKey = selectedTaskAction?.actionKey ?? "None";
     const selectedTransition = selectedTask?.availableTransitions.find(
       (transition) => transition.id === transitionId,
     );
     const normalizedData = { ...actionData, ...extraData };
+    const validationError = validateWorkflowForm(currentFormTemplate.data?.schemaJson, normalizedData);
+    if (validationError) { message.error(validationError); return; }
     if (actionKey === "CustomerAction" && !normalizedData.decision) {
       normalizedData.decision = selectedTransition?.name.includes("انصراف")
         ? "cancel"
         : "approve";
     }
 
-    const actionPayload = actionKey === "FillForm" || selectedTaskAction?.formCode
-      ? normalizedData
-      : {
+    const actionPayload = {
           ...normalizedData,
           comment: values.comment?.trim() || undefined,
         };
@@ -438,6 +438,7 @@ export function WorkflowInbox() {
             <>
               <WorkflowFormRenderer
                 formCode={selectedTaskAction?.formCode}
+                onUploadingChange={setFormUploading}
                 values={reviewEditable ? actionData : previousFormData}
                 readOnly={!reviewEditable}
                 onDataChange={setActionData}
@@ -453,9 +454,9 @@ export function WorkflowInbox() {
                   ویرایش فرم قبلی
                 </Button>
               )}
-              {actionData.needs_visit === "yes" && (
-                <Form.Item label="کارشناس فنی" required>
+              <Form.Item label={actionData.needs_visit === "yes" ? "کارشناس مراجعه حضوری" : "ارجاع به کارشناس دیگر (اختیاری؛ خالی یعنی انجام توسط خودم)"} required={actionData.needs_visit === "yes"}>
                   <Select
+                    allowClear
                     showSearch
                     optionFilterProp="label"
                     placeholder="انتخاب کارشناس فنی"
@@ -472,7 +473,6 @@ export function WorkflowInbox() {
                     }))}
                   />
                 </Form.Item>
-              )}
             </>
           )}
 
@@ -486,6 +486,8 @@ export function WorkflowInbox() {
               />
               <WorkflowFormRenderer
                 formCode={selectedTaskAction?.formCode}
+                values={actionData}
+                onUploadingChange={setFormUploading}
                 onDataChange={setActionData}
               />
             </>
@@ -496,6 +498,7 @@ export function WorkflowInbox() {
             selectedTaskAction.actionKey !== "DecideSiteVisit" && (
               <WorkflowFormRenderer
                 formCode={selectedTaskAction.formCode}
+                onUploadingChange={setFormUploading}
                 values={reviewEditable ? actionData : previousFormData}
                 onDataChange={setActionData}
               />

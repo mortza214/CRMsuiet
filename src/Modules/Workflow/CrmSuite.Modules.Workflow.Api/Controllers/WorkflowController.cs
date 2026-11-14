@@ -40,7 +40,8 @@ public sealed class WorkflowController : ControllerBase
         return Ok(new
         {
             success = true,
-            data = users.Items.Select(user => new
+            data = users.Items.Where(user => user.UserDepartments.Any(item => item.Department.Name == "فنی")
+                || user.UserRoles.Any(item => item.Role.Name is "TechnicalExpert" or "TechnicalManager")).Select(user => new
             {
                 id = user.Id,
                 fullName = user.FullName,

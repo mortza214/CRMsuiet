@@ -58,6 +58,7 @@ public interface IWorkflowDefinitionRepository
 
 public interface IWorkflowInstanceRepository
 {
+    Task<bool> HasDefinitionInstancesAsync(Guid definitionId, CancellationToken cancellationToken);
     Task<WorkflowInstance?> GetByIdWithGraphAsync(Guid id, CancellationToken cancellationToken);
 
     Task<WorkflowInstance?> GetByIdempotencyKeyAsync(

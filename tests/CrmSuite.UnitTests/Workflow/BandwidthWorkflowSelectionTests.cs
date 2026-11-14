@@ -126,6 +126,10 @@ public sealed class BandwidthWorkflowSelectionTests
             clock.SetupGet(provider => provider.UtcNow).Returns(DateTime.UtcNow);
 
             var definition = BuildDefinition();
+            service.SetWorkflowDefinition(definition.Id, null, DateTime.UtcNow);
+            definitions.Setup(repository => repository.GetByIdWithGraphAsync(definition.Id, It.IsAny<CancellationToken>())).ReturnsAsync(definition);
+            definition.Publish(null, DateTime.UtcNow);
+            customerRepository.Setup(repository => repository.GetByUserIdAsync(It.IsAny<Guid>(), false, It.IsAny<CancellationToken>())).ReturnsAsync(customer);
             definitions.Setup(repository => repository.GetPublishedByEntityTypeAsync(
                     WorkflowEntityType.Order,
                     It.IsAny<CancellationToken>()))
@@ -178,7 +182,11 @@ public sealed class BandwidthWorkflowSelectionTests
                 _starter.Object,
                 _workflow.Object,
                 currentUser.Object,
-                clock.Object);
+                clock.Object,
+                Mock.Of<CrmSuite.Modules.Identity.Application.Abstractions.IUserRepository>(),
+                Mock.Of<CrmSuite.Modules.Forms.Application.Abstractions.IFormTemplateRepository>(),
+                Mock.Of<CrmSuite.Modules.Forms.Application.Abstractions.IFormSchemaValidator>(),
+                Mock.Of<IMediator>());
         }
 
         public string StartedCode { get; private set; } = string.Empty;
@@ -189,7 +197,7 @@ public sealed class BandwidthWorkflowSelectionTests
                     _customerId,
                     _serviceId,
                     attributesJson,
-                    false),
+                    false, FromPortal: true),
                 CancellationToken.None);
 
         private static WorkflowDefinition BuildDefinition()
@@ -208,8 +216,11 @@ public sealed class BandwidthWorkflowSelectionTests
                 "FEASIBILITY", "فنی", WorkflowStateType.Normal, 2, false,
                 WorkflowAssigneeType.None, null, null, "#000");
             definition.AddState(
-                "PROFORMA", "پیش‌فاکتور", WorkflowStateType.Normal, 3, false,
+                "PROFORMA", "پیش‌فاکتور", WorkflowStateType.End, 3, true,
                 WorkflowAssigneeType.None, null, null, "#000");
+            var states = definition.States.ToArray();
+            definition.AddTransition(states[0].Id, states[1].Id, "بعدی", WorkflowGuardType.None, null, null, false, 1, null, DateTime.UtcNow);
+            definition.AddTransition(states[1].Id, states[2].Id, "پایان", WorkflowGuardType.None, null, null, false, 2, null, DateTime.UtcNow);
             return definition;
         }
 

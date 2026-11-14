@@ -42,6 +42,7 @@ import {
 } from "@/modules/orders/hooks/useOrders";
 import type { OrderItem, OrderStatus } from "@/modules/orders/types";
 import { formatCurrency } from "@/shared/utils/format";
+import { OrderWorkflowSummary } from "@/modules/workflow/components/OrderWorkflowSummary";
 
 interface DiscountForm {
   discountAmount: number;
@@ -254,6 +255,7 @@ export function OrderDetail() {
         </Space>
       </div>
 
+      <OrderWorkflowSummary orderId={id} />
       <Card className="detail-card" variant="borderless">
         <Descriptions
           bordered

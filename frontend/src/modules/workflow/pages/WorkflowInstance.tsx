@@ -12,6 +12,7 @@ import {
   Form,
   Input,
   Modal,
+  Select,
   Popconfirm,
   Result,
   Space,
@@ -27,11 +28,12 @@ import { useAuthStore } from "@/modules/auth/store";
 import { useServiceRequestDetail } from "@/modules/orders/hooks/useOrders";
 import { useFormSubmissions, useFormTemplateByCode, useFormTemplates } from "@/modules/forms/hooks/useForms";
 import { WorkflowSubmissionSummary } from "@/modules/workflow/components/WorkflowSubmissionSummary";
-import { WorkflowFormRenderer } from "@/modules/workflow/components/WorkflowFormRenderer";
+import { WorkflowFormRenderer, validateWorkflowForm } from "@/modules/workflow/components/WorkflowFormRenderer";
 import {
   useCancelWorkflowInstance,
   useExecuteWorkflowAction,
   useWorkflowInstance,
+  useWorkflowExperts,
 } from "@/modules/workflow/hooks/useWorkflow";
 import type {
   WorkflowTask,
@@ -96,12 +98,14 @@ export function WorkflowInstance() {
   const canCancel = hasPermission("Workflow.Instance.Cancel");
   const [actionOpen, setActionOpen] = useState(false);
   const [actionData, setActionData] = useState<Record<string, unknown>>({});
+  const [formUploading, setFormUploading] = useState(false);
   const [actionForm] = Form.useForm<ActionForm>();
   const instance = useWorkflowInstance(id);
   const currentTask = instance.data?.tasks.find(
     (task) => task.status === "Pending" && task.stateId === instance.data?.currentStateId,
   );
   const currentFormTemplate = useFormTemplateByCode(currentTask?.formCode ?? undefined);
+  const experts = useWorkflowExperts(currentTask?.actionKey === "DecideSiteVisit");
   const previousForms = useFormSubmissions(
     {
       page: 1,
@@ -110,7 +114,7 @@ export function WorkflowInstance() {
       entityId: instance.data?.entityId,
       formTemplateId: currentFormTemplate.data?.id,
     },
-    actionOpen && Boolean(currentTask?.formCode),
+    actionOpen && Boolean(currentFormTemplate.data?.id),
   );
   const request = useServiceRequestDetail(
     instance.data?.entityType === "Order" ? instance.data.entityId : undefined,
@@ -143,11 +147,14 @@ export function WorkflowInstance() {
   };
 
   const submitAction = async (transitionId: string) => {
+    if (formUploading) { message.info("تا پایان بارگذاری فایل صبر کنید."); return; }
     const comment = actionForm.getFieldValue("comment") as string | undefined;
     const payload = {
       ...actionData,
       ...(comment?.trim() ? { comment: comment.trim() } : {}),
     };
+    const error = validateWorkflowForm(currentFormTemplate.data?.schemaJson, payload);
+    if (error) { message.error(error); return; }
     try {
       await execute.mutateAsync({
         transitionId,
@@ -215,13 +222,13 @@ export function WorkflowInstance() {
       key: "assignee",
       width: 180,
       render: (_value, record) =>
-        record.assignedUserId
+        record.assigneeName ?? (record.assignedUserId
           ? "کاربر"
           : record.assignedRoleId
             ? "نقش"
             : record.assignedDepartmentId
               ? "دپارتمان"
-              : "بدون مسئول",
+              : "بدون مسئول"),
     },
     {
       title: "تاریخ",
@@ -260,7 +267,7 @@ export function WorkflowInstance() {
           </div>
         </Space>
 
-        {isRunning && canExecute && (
+        {isRunning && canExecute && data.canExecute !== false && decisionTransitions.length > 0 && (
           <Space wrap>
             <Button
               type="primary"
@@ -414,10 +421,16 @@ export function WorkflowInstance() {
         {currentTask?.formCode && (
           <WorkflowFormRenderer
             formCode={currentTask.formCode}
+            onUploadingChange={setFormUploading}
             values={actionData}
             onDataChange={setActionData}
           />
         )}
+        {currentTask?.actionKey === "DecideSiteVisit" && <Form.Item label={actionData.needs_visit === "yes" ? "کارشناس مراجعه حضوری" : "ارجاع به کارشناس دیگر (اختیاری)"}>
+          <Select allowClear showSearch optionFilterProp="label" value={actionData.expert_user_id as string | undefined}
+            options={(experts.data ?? []).map(user => ({ value: user.id, label: user.fullName }))}
+            onChange={value => setActionData(current => ({ ...current, expert_user_id: value }))} />
+        </Form.Item>}
         <Form form={actionForm} layout="vertical" style={{ marginTop: currentTask?.formCode ? 16 : 0 }}>
           <Form.Item name="comment" label="توضیح / دلیل">
             <Input.TextArea rows={3} />

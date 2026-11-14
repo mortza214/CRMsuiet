@@ -74,6 +74,8 @@ const assigneeLabels: Record<WorkflowAssigneeType, string> = {
   Role: "نقش",
   Department: "دپارتمان",
   CustomerOwner: "مالک مشتری",
+  RequestSalesOwner: "ثبت‌کننده / تأییدکننده اولیه فروش",
+  Customer: "مشتری",
   None: "بدون مسئول",
 };
 
@@ -530,7 +532,7 @@ export function WorkflowEditor() {
         {canManage && !isDraft && definition.data.status === "Published" && (
           <Popconfirm
             title="گردش کار برای ویرایش باز شود؟"
-            description="وضعیت به پیش‌نویس برمی‌گردد و Version تغییر نمی‌کند. پس از ویرایش باید مجدداً منتشر شود."
+            description="تنها گردش کاری که درخواست ثبت‌شده ندارد قابل ویرایش است. پس از ویرایش، آن را دوباره منتشر کنید."
             okText="بازگشت به ویرایش"
             cancelText="انصراف"
             onConfirm={async () => {
@@ -543,7 +545,7 @@ export function WorkflowEditor() {
             }}
           >
             <Button danger icon={<EditOutlined />} loading={reopen.isPending}>
-              ویرایش مستقیم (فقط برای تست)
+              ویرایش گردش کار بدون درخواست
             </Button>
           </Popconfirm>
         )}

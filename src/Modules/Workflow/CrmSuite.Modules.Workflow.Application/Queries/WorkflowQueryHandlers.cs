@@ -77,15 +77,18 @@ public sealed class GetWorkflowInstanceQueryHandler
     private readonly IWorkflowDefinitionRepository _definitions;
     private readonly IWorkflowInstanceRepository _instances;
     private readonly WorkflowDtoMapper _mapper;
+    private readonly WorkflowViewEnricher? _view;
 
     public GetWorkflowInstanceQueryHandler(
         IWorkflowDefinitionRepository definitions,
         IWorkflowInstanceRepository instances,
-        WorkflowDtoMapper mapper)
+        WorkflowDtoMapper mapper,
+        WorkflowViewEnricher? view = null)
     {
         _definitions = definitions;
         _instances = instances;
         _mapper = mapper;
+        _view = view;
     }
 
     public async Task<Result<WorkflowInstanceDto>> Handle(
@@ -107,7 +110,8 @@ public sealed class GetWorkflowInstanceQueryHandler
             ? Result.Failure<WorkflowInstanceDto>(
                 "تعریف گردش کار یافت نشد.",
                 "WORKFLOW_DEFINITION_NOT_FOUND")
-            : Result.Success(_mapper.ToInstance(instance, definition));
+            : Result.Success(_view is null ? _mapper.ToInstance(instance, definition)
+                : await _view.EnrichAsync(instance, definition, _mapper.ToInstance(instance, definition), cancellationToken));
     }
 }
 
@@ -170,19 +174,22 @@ public sealed class GetMyWorkflowTasksQueryHandler
     private readonly IWorkflowActorAccessor _actorAccessor;
     private readonly IWorkflowEntityDisplayResolver? _displayResolver;
     private readonly WorkflowDtoMapper _mapper;
+    private readonly WorkflowViewEnricher? _view;
 
     public GetMyWorkflowTasksQueryHandler(
         IWorkflowInstanceRepository instances,
         IWorkflowDefinitionRepository definitions,
         IWorkflowActorAccessor actorAccessor,
         WorkflowDtoMapper mapper,
-        IWorkflowEntityDisplayResolver? displayResolver = null)
+        IWorkflowEntityDisplayResolver? displayResolver = null,
+        WorkflowViewEnricher? view = null)
     {
         _instances = instances;
         _definitions = definitions;
         _actorAccessor = actorAccessor;
         _displayResolver = displayResolver;
         _mapper = mapper;
+        _view = view;
     }
 
     public async Task<Result<PagedResult<WorkflowTaskDto>>> Handle(
@@ -236,9 +243,12 @@ public sealed class GetMyWorkflowTasksQueryHandler
             }
 
             var key = (instance.EntityType, instance.EntityId);
+            var taskDto = _mapper.ToTask(task, instance, definition);
+            if (_view is not null)
+                taskDto = (await _view.EnrichAsync(instance, definition, _mapper.ToInstance(instance, definition), cancellationToken)).Tasks.First(item => item.Id == task.Id);
             if (_displayResolver is null)
             {
-                result.Add(_mapper.ToTask(task, instance, definition));
+                result.Add(taskDto);
                 continue;
             }
 
@@ -251,7 +261,7 @@ public sealed class GetMyWorkflowTasksQueryHandler
                 displays[key] = display;
             }
 
-            result.Add(_mapper.ToTask(task, instance, definition) with
+            result.Add(taskDto with
             {
                 EntityDisplayName = display.DisplayName,
                 EntityReference = display.Reference,

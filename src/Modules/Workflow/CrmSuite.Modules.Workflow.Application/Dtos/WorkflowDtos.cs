@@ -80,7 +80,8 @@ public sealed record WorkflowTaskDto(
     string? EntityDisplayName = null,
     string? EntityReference = null,
     string? ActionKey = null,
-    string? FormCode = null);
+    string? FormCode = null,
+    string? AssigneeName = null);
 
 public sealed record WorkflowHistoryDto(
     Guid Id,
@@ -116,4 +117,5 @@ public sealed record WorkflowInstanceDto(
     string? CorrelationId,
     IReadOnlyList<WorkflowTaskDto> Tasks,
     IReadOnlyList<WorkflowHistoryDto> History,
-    IReadOnlyList<WorkflowTransitionDto> AvailableTransitions);
+    IReadOnlyList<WorkflowTransitionDto> AvailableTransitions,
+    bool CanExecute = true);

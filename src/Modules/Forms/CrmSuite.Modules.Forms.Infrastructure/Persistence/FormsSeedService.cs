@@ -37,6 +37,14 @@ public sealed class FormsSeedService
             .ToHashSet(StringComparer.Ordinal);
 
         var now = DateTime.UtcNow;
+        foreach (var form in new[] {
+            (Code: "BW_INTAKE_REQUEST", Title: "درخواست پهنای باند اختصاصی", Schema: BandwidthIntakeSchemas.Request),
+            (Code: "BW_INTAKE_VISIT", Title: "تصمیم امکان‌سنجی حضوری", Schema: BandwidthIntakeSchemas.Decision),
+            (Code: "BW_INTAKE_RESULT", Title: "نتیجه امکان‌سنجی پهنای باند اختصاصی", Schema: BandwidthIntakeSchemas.Result) })
+        {
+            if (!existing.Contains(form.Code))
+                await AddAsync(form.Code, form.Title, FormEntityType.Order, form.Schema, now, cancellationToken);
+        }
         if (!existing.Contains(RequestFormCode.ToUpperInvariant()))
         {
             await AddAsync(

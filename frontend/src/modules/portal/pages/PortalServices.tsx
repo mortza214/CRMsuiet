@@ -1,4 +1,5 @@
-import { Card, Empty, Space, Table, Tag, Typography, type TableColumnsType } from "antd";
+import { Button, Card, Empty, Space, Table, Tag, Typography, type TableColumnsType } from "antd";
+import { Link } from "react-router-dom";
 import {
   usePortalActiveServices,
   usePortalServiceRequests,
@@ -78,6 +79,7 @@ export function PortalServices() {
       <div className="page-heading">
         <div>
           <Typography.Title level={2}>سرویس‌های من</Typography.Title>
+          <Link to="/portal/services/new"><Button type="primary">درخواست سرویس جدید</Button></Link>
           <Typography.Text type="secondary">
             وضعیت درخواست‌ها و سرویس‌های فعال شما
           </Typography.Text>

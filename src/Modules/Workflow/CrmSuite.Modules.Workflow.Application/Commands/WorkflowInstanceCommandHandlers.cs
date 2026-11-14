@@ -13,6 +13,8 @@ using CrmSuite.Modules.Workflow.Application.Services;
 using CrmSuite.Modules.Workflow.Domain.Entities;
 using CrmSuite.Modules.Workflow.Domain.Enums;
 using MediatR;
+using CrmSuite.Modules.Workflow.Application.Sales;
+using CrmSuite.Modules.Orders.Application.Abstractions;
 using FoundationCurrentUser = CrmSuite.Modules.Foundation.Application.Abstractions.ICurrentUserService;
 
 namespace CrmSuite.Modules.Workflow.Application.Commands;
@@ -144,6 +146,12 @@ public sealed class StartWorkflowCommandHandler
             request.EntityId,
             cancellationToken);
         var assignment = _assignmentResolver.Resolve(startState, owner, customerUser);
+        if (definition.Code == BandwidthIntake.Code && request.InitialPayload is not null)
+        {
+            using var payload = JsonDocument.Parse(request.InitialPayload);
+            if (payload.RootElement.TryGetProperty("fromPortal", out var portal) && !portal.GetBoolean())
+                assignment = new WorkflowAssignment(actor.UserId, null, null);
+        }
 
         var instance = new WorkflowInstance(
             definition,
@@ -244,6 +252,7 @@ public sealed class ExecuteWorkflowTransitionCommandHandler
     private readonly FoundationCurrentUser _currentUser;
     private readonly IDateTimeProvider _clock;
     private readonly WorkflowDtoMapper _mapper;
+    private readonly IOrderRepository? _intakeOrders;
 
     public ExecuteWorkflowTransitionCommandHandler(
         IWorkflowDefinitionRepository definitions,
@@ -259,7 +268,8 @@ public sealed class ExecuteWorkflowTransitionCommandHandler
         IAuditService auditService,
         FoundationCurrentUser currentUser,
         IDateTimeProvider clock,
-        WorkflowDtoMapper mapper)
+        WorkflowDtoMapper mapper,
+        IOrderRepository? intakeOrders = null)
     {
         _definitions = definitions;
         _instances = instances;
@@ -275,6 +285,7 @@ public sealed class ExecuteWorkflowTransitionCommandHandler
         _currentUser = currentUser;
         _clock = clock;
         _mapper = mapper;
+        _intakeOrders = intakeOrders;
     }
 
     public async Task<Result<WorkflowInstanceDto>> Handle(
@@ -338,6 +349,17 @@ public sealed class ExecuteWorkflowTransitionCommandHandler
 
         var targetState = definition.FindState(transition.ToStateId);
         var actor = await _actorAccessor.GetAsync(cancellationToken);
+        if (definition.Code == BandwidthIntake.Code)
+        {
+            var intakeOrder = _intakeOrders is null ? null : await _intakeOrders.GetByIdWithDetailsAsync(instance.EntityId, cancellationToken);
+            var validated = BandwidthIntake.ValidateTransition(instance, definition, transition,
+                intakeOrder?.Items.FirstOrDefault()?.AttributesJson ?? "{}", actor, request.PayloadJson);
+            if (validated.IsFailure) return Result.Failure<WorkflowInstanceDto>(validated.Errors, validated.Message);
+            if (currentState.FormCode is not null && !request.ActionValidated)
+                return Result.Failure<WorkflowInstanceDto>("ابتدا فرم این مرحله را از کارتابل ثبت کنید.", "WORKFLOW_FORM_ACTION_REQUIRED");
+            if (currentState.StateType == WorkflowStateType.Start && actor.UserId.HasValue)
+                intakeOrder?.AssignSalesExpert(actor.UserId.Value, _clock.UtcNow);
+        }
 
         if (!await GuardAsync(instance, transition, currentState, targetState, actor, request))
         {
@@ -354,8 +376,15 @@ public sealed class ExecuteWorkflowTransitionCommandHandler
             instance.EntityType,
             instance.EntityId,
             cancellationToken);
-        var assignment = _assignmentResolver.Resolve(targetState, owner, customerUser);
-        var explicitAssignee = ReadExplicitAssignee(request.PayloadJson);
+        var assignment = _assignmentResolver.Resolve(targetState, owner, customerUser, BandwidthIntake.SalesOwner(instance, definition));
+        // Explicit expert selection belongs only to the report assignment, never to the manager review or sales return.
+        var explicitAssignee = definition.Code == BandwidthIntake.Code
+            ? currentState.Code == "FEASIBILITY_TRIAGE" ? ReadExplicitAssignee(request.PayloadJson) ?? actor.UserId : null
+            : ReadExplicitAssignee(request.PayloadJson);
+        if (definition.Code == BandwidthIntake.Code && currentState.Code == "FEASIBILITY_REVIEW" && targetState.Code == "FEASIBILITY_REPORT")
+            explicitAssignee = instance.Tasks.Where(task => task.StateId == targetState.Id).OrderByDescending(task => task.CreatedAt).FirstOrDefault()?.AssignedUserId;
+        if (definition.Code == BandwidthIntake.Code && currentState.StateType == WorkflowStateType.Start && targetState.AssigneeType == WorkflowAssigneeType.RequestSalesOwner)
+            assignment = new WorkflowAssignment(actor.UserId, null, null);
         if (explicitAssignee.HasValue)
         {
             assignment = new WorkflowAssignment(explicitAssignee.Value, null, null);

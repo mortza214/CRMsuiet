@@ -1,5 +1,6 @@
 import { Card, Descriptions, Empty, Space, Tag, Typography } from "antd";
 import type { FormSubmission, FormTemplate } from "@/modules/forms/types";
+import { resolveApiFileUrl } from "@/shared/utils/format";
 
 interface Props {
   submissions: FormSubmission[];
@@ -76,7 +77,9 @@ export function WorkflowSubmissionSummary({ submissions, templates }: Props) {
                 )?.label;
                 return (
                   <Descriptions.Item key={field.key} label={field.label}>
-                    {readable ?? String(value)}
+                    {typeof value === "string" && value.startsWith("/uploads/")
+                      ? <Typography.Link href={resolveApiFileUrl(value)} target="_blank" rel="noopener noreferrer">مشاهده پیوست</Typography.Link>
+                      : readable ?? String(value)}
                   </Descriptions.Item>
                 );
               })}

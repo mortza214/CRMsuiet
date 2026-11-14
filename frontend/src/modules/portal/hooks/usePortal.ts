@@ -85,6 +85,7 @@ export function usePortalActiveServices() {
 
 export function usePortalServiceRequests() {
   return useQuery({
+    refetchInterval: 15_000,
     queryKey: ["portal", "service-requests"],
     queryFn: async () => {
       const response = await portalApi.get<ApiEnvelope<ServiceRequestSummary[]>>(

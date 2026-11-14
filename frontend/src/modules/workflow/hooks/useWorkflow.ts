@@ -255,6 +255,7 @@ export function useMyWorkflowTasks(
 
 export function useWorkflowInstance(id: string | undefined) {
   return useQuery({
+    refetchInterval: 15_000,
     queryKey: ["workflow", "instance", id],
     queryFn: async () => {
       const response = await api.get<ApiEnvelope<WorkflowInstance>>(
@@ -333,6 +334,9 @@ export function useExecuteWorkflowAction(instanceId: string | undefined) {
     },
     onSuccess: async () => {
       await queryClient.invalidateQueries({ queryKey: ["workflow"] });
+      await queryClient.invalidateQueries({ queryKey: ["forms", "submissions"] });
+      await queryClient.invalidateQueries({ queryKey: ["orders"] });
+      await queryClient.invalidateQueries({ queryKey: ["sales"] });
     },
   });
 }

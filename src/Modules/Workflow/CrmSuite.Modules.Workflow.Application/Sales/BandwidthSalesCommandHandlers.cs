@@ -21,6 +21,10 @@ using CrmSuite.Modules.Workflow.Application.Mapping;
 using CrmSuite.Modules.Workflow.Domain.Entities;
 using CrmSuite.Modules.Workflow.Domain.Enums;
 using MediatR;
+using CrmSuite.Modules.Forms.Application.Abstractions;
+using CrmSuite.Modules.Forms.Application.Commands;
+using CrmSuite.Modules.Forms.Domain.Enums;
+using CrmSuite.Modules.Identity.Application.Abstractions;
 using FoundationCurrentUser = CrmSuite.Modules.Foundation.Application.Abstractions.ICurrentUserService;
 
 namespace CrmSuite.Modules.Workflow.Application.Sales;
@@ -116,6 +120,10 @@ public sealed class CreateServiceRequestCommandHandler
     private readonly BandwidthWorkflowSupport _workflow;
     private readonly FoundationCurrentUser _currentUser;
     private readonly IDateTimeProvider _clock;
+    private readonly IUserRepository _users;
+    private readonly IFormTemplateRepository _forms;
+    private readonly IFormSchemaValidator _formValidator;
+    private readonly IMediator _mediator;
 
     public CreateServiceRequestCommandHandler(
         IOrderRepository orders,
@@ -128,7 +136,11 @@ public sealed class CreateServiceRequestCommandHandler
         IWorkflowStarter workflowStarter,
         BandwidthWorkflowSupport workflow,
         FoundationCurrentUser currentUser,
-        IDateTimeProvider clock)
+        IDateTimeProvider clock,
+        IUserRepository users,
+        IFormTemplateRepository forms,
+        IFormSchemaValidator formValidator,
+        IMediator mediator)
     {
         _workflow = workflow;
         _orders = orders;
@@ -141,6 +153,10 @@ public sealed class CreateServiceRequestCommandHandler
         _workflowStarter = workflowStarter;
         _currentUser = currentUser;
         _clock = clock;
+        _users = users;
+        _forms = forms;
+        _formValidator = formValidator;
+        _mediator = mediator;
     }
 
     public async Task<Result<ServiceRequestResultDto>> Handle(
@@ -154,7 +170,16 @@ public sealed class CreateServiceRequestCommandHandler
                 "SALES_USER_REQUIRED");
         }
 
-        var customer = await _customers.GetByIdAsync(
+        if (!request.FromPortal)
+        {
+            var user = await _users.GetByIdWithAccessAsync(_currentUser.UserId.Value, cancellationToken);
+            if (user is null || !user.IsActive || !(user.UserDepartments.Any(item => item.Department.Name == "فروش")
+                || user.UserRoles.Any(item => item.Role.Name is Roles.SuperAdmin or Roles.SystemAdmin or Roles.SalesExpert or Roles.SalesManager)))
+                return Result.Failure<ServiceRequestResultDto>("ثبت درخواست فقط برای مشتری و کاربران فروش مجاز است.", "SALES_ACCESS_DENIED");
+        }
+        var customer = request.FromPortal
+            ? await _customers.GetByUserIdAsync(_currentUser.UserId.Value, false, cancellationToken)
+            : await _customers.GetByIdAsync(
             request.CustomerId,
             includeDetails: false,
             cancellationToken);
@@ -176,9 +201,32 @@ public sealed class CreateServiceRequestCommandHandler
         var attributes = string.IsNullOrWhiteSpace(request.AttributesJson)
             ? "{}"
             : request.AttributesJson;
+        try
+        {
+            using var parsed = JsonDocument.Parse(attributes);
+            if (parsed.RootElement.ValueKind != JsonValueKind.Object) throw new JsonException();
+        }
+        catch (JsonException)
+        {
+            return Result.Failure<ServiceRequestResultDto>("مشخصات درخواست معتبر نیست.", "SALES_ATTRIBUTES_INVALID");
+        }
+        var definitionCode = await ResolveWorkflowCodeAsync(service.WorkflowDefinitionId, true, cancellationToken);
+        if (definitionCode is null)
+            return Result.Failure<ServiceRequestResultDto>("ابتدا یک گردش کار منتشرشده به این سرویس متصل کنید.", "SALES_WORKFLOW_NOT_FOUND");
+        var intakeForm = definitionCode == BandwidthIntake.Code
+            ? await _forms.GetByCodeAsync(BandwidthIntake.RequestForm, cancellationToken) : null;
+        if (definitionCode == BandwidthIntake.Code)
+        {
+            if (intakeForm?.Status != FormDefinitionStatus.Published)
+                return Result.Failure<ServiceRequestResultDto>("فرم درخواست منتشر نشده است.", "SALES_REQUEST_FORM_NOT_PUBLISHED");
+            var errors = _formValidator.Validate(intakeForm.SchemaJson, attributes);
+            if (errors.Count > 0) return Result.Failure<ServiceRequestResultDto>(errors.ToArray(), "فرم درخواست را تکمیل کنید.");
+        }
         var substrate = ReadString(attributes, "substrate", "medium", "connection_type");
         var bandwidth = ReadDecimal(attributes, "bandwidth_mb", "bandwidth");
-        var requiresFeasibility = request.RequiresFeasibility
+        if (bandwidth.HasValue && (bandwidth.Value <= 0 || bandwidth.Value > int.MaxValue))
+            return Result.Failure<ServiceRequestResultDto>("میزان پهنای باند معتبر نیست.", "SALES_BANDWIDTH_INVALID");
+        var requiresFeasibility = definitionCode == BandwidthIntake.Code || request.RequiresFeasibility
                                   || substrate.Contains("wireless", StringComparison.OrdinalIgnoreCase)
                                   || substrate.Contains("وایرلس", StringComparison.Ordinal);
         var quantity = service.ServiceType is ServiceType.BandwidthDedicated or ServiceType.BandwidthShared
@@ -187,7 +235,7 @@ public sealed class CreateServiceRequestCommandHandler
             : 1;
 
         var calculated = await _pricing.CalculateAsync(
-            new ServicePricingRequest(service.Id, quantity, [], attributes),
+            new ServicePricingRequest(service.Id, quantity, [], attributes, SkipAttributeValidation: intakeForm is not null),
             cancellationToken);
         if (calculated.IsFailure)
         {
@@ -243,17 +291,11 @@ public sealed class CreateServiceRequestCommandHandler
         _orders.Add(order);
         await _orderUnitOfWork.SaveChangesAsync(cancellationToken);
 
-        var definitionCode = await ResolveWorkflowCodeAsync(
-            service.WorkflowDefinitionId,
-            requiresFeasibility,
-            cancellationToken);
-        if (definitionCode is null)
+        if (intakeForm is not null)
         {
-            order.ChangeStatus(OrderStatus.Canceled, _currentUser.UserId, now, "گردش کار مناسب یافت نشد.");
-            await _orderUnitOfWork.SaveChangesAsync(cancellationToken);
-            return Result.Failure<ServiceRequestResultDto>(
-                "گردش کار مناسب برای این سرویس فعال و منتشر نشده است.",
-                "SALES_WORKFLOW_NOT_FOUND");
+            var submitted = await _mediator.Send(new SubmitFormCommand(intakeForm.Id, customer.Id, order.Id,
+                attributes, EntityType: FormEntityType.Order, EntityId: order.Id), cancellationToken);
+            if (submitted.IsFailure) return Result.Failure<ServiceRequestResultDto>(submitted.Errors, submitted.Message);
         }
 
         var workflow = await _workflowStarter.TryStartAsync(
@@ -263,6 +305,7 @@ public sealed class CreateServiceRequestCommandHandler
             JsonSerializer.Serialize(new
             {
                 Source = "ServiceRequest",
+                fromPortal = request.FromPortal,
                 serviceId = service.Id,
                 requiresFeasibility,
                 substrate,
@@ -278,6 +321,18 @@ public sealed class CreateServiceRequestCommandHandler
             return Result.Failure<ServiceRequestResultDto>(
                 "گردش کار سرویس آغاز نشد؛ تعریف منتشرشده را بررسی کنید.",
                 "SALES_WORKFLOW_START_FAILED");
+        }
+
+        // Staff intake is already approved by its sales author. Customer intake remains in the sales queue.
+        if (!request.FromPortal && definitionCode == BandwidthIntake.Code)
+        {
+            var active = await _workflow.GetActiveAsync(order.Id, cancellationToken);
+            if (active is not null)
+            {
+                var moved = await _workflow.MoveAsync(active.Value.Instance, active.Value.Definition,
+                    "FEASIBILITY_TRIAGE", "{}", "ثبت و تأیید اولیه توسط فروش", cancellationToken);
+                if (moved.IsFailure) return Result.Failure<ServiceRequestResultDto>(moved.Errors, moved.Message);
+            }
         }
 
         return Result.Success(new ServiceRequestResultDto(
@@ -305,10 +360,7 @@ public sealed class CreateServiceRequestCommandHandler
             }
         }
 
-        var published = await _definitions.GetPublishedByEntityTypeAsync(
-            WorkflowEntityType.Order,
-            cancellationToken);
-        return published?.Code;
+        return null;
     }
 
     private static string ReadString(string json, params string[] keys)

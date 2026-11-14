@@ -30,6 +30,7 @@ public enum WorkflowAssigneeType
     CustomerOwner = 4,
     None = 5,
     Customer = 6,
+    RequestSalesOwner = 7,
 }
 
 public enum WorkflowGuardType

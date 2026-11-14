@@ -23,6 +23,8 @@ public static class DependencyInjection
         services.AddScoped<IWorkflowNotifier, WorkflowNotifier>();
         services.AddScoped<WorkflowAssignmentResolver>();
         services.AddScoped<WorkflowDtoMapper>();
+        services.AddScoped<WorkflowViewEnricher>();
+        services.AddTransient(typeof(MediatR.IPipelineBehavior<,>), typeof(ServiceIntakeTransactionBehavior<,>));
         services.AddScoped<IWorkflowStarter, WorkflowStarter>();
         services.AddScoped<WorkflowSeedService>();
         services.AddScoped<BandwidthWorkflowSupport>();

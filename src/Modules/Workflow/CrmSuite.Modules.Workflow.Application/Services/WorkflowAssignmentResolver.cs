@@ -15,7 +15,8 @@ public sealed class WorkflowAssignmentResolver
     public WorkflowAssignment Resolve(
         WorkflowState state,
         Guid? customerOwnerUserId,
-        Guid? customerUserId = null)
+        Guid? customerUserId = null,
+        Guid? requestSalesOwnerId = null)
     {
         return state.AssigneeType switch
         {
@@ -36,6 +37,7 @@ public sealed class WorkflowAssignmentResolver
                 customerOwnerUserId,
                 null,
                 null),
+            WorkflowAssigneeType.RequestSalesOwner => new WorkflowAssignment(requestSalesOwnerId, null, null),
             WorkflowAssigneeType.Customer => new WorkflowAssignment(
                 customerUserId,
                 null,

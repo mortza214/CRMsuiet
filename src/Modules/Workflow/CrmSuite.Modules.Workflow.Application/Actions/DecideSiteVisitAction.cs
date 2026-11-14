@@ -8,10 +8,12 @@ namespace CrmSuite.Modules.Workflow.Application.Actions;
 public sealed class DecideSiteVisitAction : IWorkflowAction
 {
     private readonly BandwidthPhase6Support _support;
+    private readonly CrmSuite.Modules.Identity.Application.Abstractions.IUserRepository _users;
 
-    public DecideSiteVisitAction(BandwidthPhase6Support support)
+    public DecideSiteVisitAction(BandwidthPhase6Support support, CrmSuite.Modules.Identity.Application.Abstractions.IUserRepository users)
     {
         _support = support;
+        _users = users;
     }
 
     public WorkflowActionKey Key => WorkflowActionKey.DecideSiteVisit;
@@ -35,16 +37,19 @@ public sealed class DecideSiteVisitAction : IWorkflowAction
                 "WORKFLOW_SITE_VISIT_DECISION_REQUIRED");
         }
 
-        if (needsVisit == "yes")
+        var expert = ReadString(root, "expert_user_id") ?? ReadString(root, "expertUserId");
+        if (needsVisit == "yes" || !string.IsNullOrWhiteSpace(expert))
         {
-            var expert = ReadString(root, "expert_user_id")
-                         ?? ReadString(root, "expertUserId");
-            if (!Guid.TryParse(expert, out _))
+            if (!Guid.TryParse(expert, out var expertId))
             {
                 return Result.Failure(
                     "برای مراجعه حضوری، انتخاب کارشناس فنی الزامی است.",
                     "WORKFLOW_SITE_VISIT_EXPERT_REQUIRED");
             }
+            var user = await _users.GetByIdWithAccessAsync(expertId, cancellationToken);
+            if (user is null || !user.IsActive || !(user.UserDepartments.Any(item => item.Department.Name == "فنی")
+                || user.UserRoles.Any(item => item.Role.Name is "TechnicalExpert" or "TechnicalManager")))
+                return Result.Failure("کارشناس انتخاب‌شده باید کاربر فعال واحد فنی باشد.", "WORKFLOW_TECHNICAL_EXPERT_INVALID");
         }
 
         var form = await _support.SubmitFormAsync(
